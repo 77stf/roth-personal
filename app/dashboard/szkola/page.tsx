@@ -1,191 +1,97 @@
 export const dynamic = 'force-dynamic'
 
-import { Suspense } from 'react'
-import { getLessonPlan, getSprawdziany } from '@/lib/sheets'
-import { SZKOLA } from '@/lib/constants'
+// ─── Pełny plan lekcji z live statusem ────────────────────────────────────
 
-const DAYS = ['poniedzialek', 'wtorek', 'sroda', 'czwartek', 'piatek']
-const DAY_LABELS: Record<string, string> = {
-  poniedzialek: 'Poniedziałek',
-  wtorek: 'Wtorek',
-  sroda: 'Środa',
-  czwartek: 'Czwartek',
-  piatek: 'Piątek',
+import { getLessonPlan, getSprawdziany } from '@/lib/sheets'
+import { LESSON_TIMES, PRZEDMIOT_NAZWY, PRZEDMIOT_KOLORY, SZKOLA } from '@/lib/constants'
+import SchoolLiveView from './SchoolLiveView'
+
+const DAY_MAP: Record<number, string> = {
+  0: '', 1: 'Poniedzialek', 2: 'Wtorek', 3: 'Sroda', 4: 'Czwartek', 5: 'Piatek', 6: '',
+}
+const DAY_DISPLAY: Record<string, string> = {
+  'Poniedzialek': 'Poniedziałek', 'Wtorek': 'Wtorek', 'Sroda': 'Środa',
+  'Czwartek': 'Czwartek', 'Piatek': 'Piątek',
 }
 
-async function SzkolaContent() {
-  const today = new Date()
-  const dayIndex = today.getDay()  // 0=niedziela, 1=pon, ...
-  const todayKey = dayIndex >= 1 && dayIndex <= 5 ? DAYS[dayIndex - 1] : 'poniedzialek'
+export interface LessonWithTime {
+  nr: number
+  od: string
+  do: string
+  przedmiot: string
+  przedmiotPelna: string
+  sala: string
+  grupa: string
+  kolor: string
+}
 
-  const [todayLessons, sprawdziany] = await Promise.all([
-    getLessonPlan(todayKey),
-    getSprawdziany(true),
+export default async function SzkolaPage() {
+  const now = new Date()
+  const todayIdx = now.getDay()
+  const todayKey = DAY_MAP[todayIdx] ?? ''
+  const isWeekend = todayIdx === 0 || todayIdx === 6
+  const tomorrowIdx = (todayIdx + 1) % 7
+  const tomorrowKey = DAY_MAP[tomorrowIdx] ?? ''
+
+  const [todayLessons, tomorrowLessons, sprawdziany] = await Promise.all([
+    todayKey ? getLessonPlan(todayKey) : Promise.resolve([]),
+    tomorrowKey ? getLessonPlan(tomorrowKey) : Promise.resolve([]),
+    getSprawdziany(),
   ])
 
-  // Dzień tygodnia
-  const todayLabel = DAY_LABELS[todayKey!] ?? 'Dzisiaj'
+  function mapLessons(lessons: typeof todayLessons): LessonWithTime[] {
+    return lessons.map(l => {
+      const times = LESSON_TIMES[l.nrLekcji]
+      const kolor = PRZEDMIOT_KOLORY[l.przedmiot] ?? PRZEDMIOT_KOLORY['default'] ?? '#94a3b8'
+      return {
+        nr: l.nrLekcji,
+        od: times?.od ?? '--:--',
+        do: times?.do ?? '--:--',
+        przedmiot: l.przedmiot,
+        przedmiotPelna: PRZEDMIOT_NAZWY[l.przedmiot] ?? l.przedmiot,
+        sala: l.sala,
+        grupa: l.grupa,
+        kolor,
+      }
+    }).sort((a, b) => a.nr - b.nr)
+  }
 
-  // Link zastępstw na dziś
-  const zastepstwaLink = SZKOLA.zastepstwaLinki[todayKey as keyof typeof SZKOLA.zastepstwaLinki]
+  function timeToMins(t: string) {
+    const [h, m] = t.split(':').map(Number)
+    return (h ?? 0) * 60 + (m ?? 0)
+  }
 
-  return (
-    <div style={{ padding: '20px', maxWidth: '800px' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>ZSE Śrem | 3PB gr.2/2</div>
-        <div style={{ fontSize: '28px', fontWeight: 700, marginTop: '4px' }}>Szkoła</div>
-      </div>
+  const todayMapped = mapLessons(todayLessons)
+  const tomorrowMapped = mapLessons(tomorrowLessons)
+  const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+  const nowMins = timeToMins(currentTimeStr)
 
-      {/* Zastępstwa */}
-      <div className="card" style={{ marginBottom: '16px', borderLeft: '3px solid var(--accent-orange)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <div>
-            <div style={{ fontSize: '13px', fontWeight: 600 }}>Zastępstwa — {todayLabel}</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Filtrowane dla 3PB gr.2/2</div>
-          </div>
-          <a
-            href={zastepstwaLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              fontSize: '12px',
-              color: 'var(--accent-blue)',
-              textDecoration: 'none',
-              padding: '6px 12px',
-              background: 'rgba(76,201,240,0.1)',
-              borderRadius: '6px',
-              border: '1px solid rgba(76,201,240,0.3)',
-            }}
-          >
-            Sprawdź →
-          </a>
-        </div>
-        <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-          Kliknij "Sprawdź" aby zobaczyć aktualne zastępstwa na stronie ZSE Śrem.
-        </div>
-      </div>
+  const currentLesson = isWeekend ? null : todayMapped.find(l =>
+    timeToMins(l.od) <= nowMins && nowMins <= timeToMins(l.do)
+  ) ?? null
+  const nextLesson = isWeekend ? null : todayMapped.find(l =>
+    timeToMins(l.od) > nowMins
+  ) ?? null
 
-      {/* Plan lekcji dziś */}
-      <div className="card" style={{ marginBottom: '16px' }}>
-        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Plan lekcji — {todayLabel}
-        </div>
-
-        {todayLessons.length === 0 ? (
-          <div style={{ fontSize: '14px', color: 'var(--text-secondary)', padding: '8px 0' }}>
-            Brak lekcji / dane z arkusza PLAN_LEKCJI
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {todayLessons.map((lesson, i) => (
-              <div key={i} style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '8px 10px',
-                background: 'var(--bg-elevated)',
-                borderRadius: '8px',
-              }}>
-                <div style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '8px',
-                  background: 'var(--bg-card)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  color: 'var(--text-secondary)',
-                  flexShrink: 0,
-                }}>
-                  {lesson.nrLekcji}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '13px', fontWeight: 600 }}>{lesson.przedmiot}</div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                    {lesson.nauczyciel} • Sala {lesson.sala}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Sprawdziany */}
-      <div className="card">
-        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Nadchodzące sprawdziany
-        </div>
-
-        {sprawdziany.length === 0 ? (
-          <div style={{ fontSize: '14px', color: 'var(--accent-green)' }}>Brak nadchodzących sprawdzianów 🎉</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {sprawdziany.map(s => {
-              const daysUntil = Math.ceil(
-                (new Date(s.data).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-              )
-              const urgentColor = daysUntil <= 1 ? 'var(--accent-red)' : daysUntil <= 3 ? 'var(--accent-yellow)' : 'var(--accent-green)'
-
-              return (
-                <div key={s.id} style={{
-                  padding: '12px',
-                  background: 'var(--bg-elevated)',
-                  borderRadius: '8px',
-                  borderLeft: `3px solid ${urgentColor}`,
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <div style={{ fontSize: '13px', fontWeight: 600 }}>{s.przedmiot}</div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>{s.temat}</div>
-                    </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '12px' }}>
-                      <div style={{ fontSize: '13px', fontWeight: 700, color: urgentColor }}>
-                        {daysUntil === 0 ? 'DZIŚ' : daysUntil === 1 ? 'JUTRO' : `za ${daysUntil} dni`}
-                      </div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                        {new Date(s.data).toLocaleDateString('pl-PL')}
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
-                    <span style={{
-                      fontSize: '10px',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      background: 'var(--bg-card)',
-                      color: 'var(--text-secondary)',
-                      textTransform: 'uppercase',
-                    }}>
-                      {s.typ}
-                    </span>
-                    <span style={{
-                      fontSize: '10px',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      background: s.statusNauki === 'gotowy' ? 'rgba(6,214,160,0.1)' : 'rgba(255,209,102,0.1)',
-                      color: s.statusNauki === 'gotowy' ? 'var(--accent-green)' : 'var(--accent-yellow)',
-                      textTransform: 'uppercase',
-                    }}>
-                      {s.statusNauki.replace(/_/g, ' ')}
-                    </span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
-    </div>
+  // Sprawdziany z dziś/jutro
+  const todayStr = now.toISOString().split('T')[0]!
+  const tomorrowDate = new Date(now); tomorrowDate.setDate(now.getDate() + 1)
+  const tomorrowStr = tomorrowDate.toISOString().split('T')[0]!
+  const upcomingTests = sprawdziany.filter(s =>
+    s.data === todayStr || s.data === tomorrowStr
   )
-}
 
-export default function SzkolaPage() {
   return (
-    <Suspense fallback={<div style={{ padding: '40px', color: 'var(--text-secondary)' }}>Ładowanie...</div>}>
-      <SzkolaContent />
-    </Suspense>
+    <SchoolLiveView
+      todayLessons={todayMapped}
+      tomorrowLessons={tomorrowMapped}
+      currentLesson={currentLesson}
+      nextLesson={nextLesson}
+      todayName={DAY_DISPLAY[todayKey] ?? 'Weekend'}
+      tomorrowName={DAY_DISPLAY[tomorrowKey] ?? ''}
+      isWeekend={isWeekend}
+      currentTime={currentTimeStr}
+      upcomingTests={upcomingTests.map(s => ({ przedmiot: s.przedmiot, typ: s.typ, data: s.data, temat: s.temat }))}
+    />
   )
 }

@@ -8,7 +8,7 @@ import { obliczTransport, formatTransportTelegram } from './transport'
 import { quickReply, parseQuickExpense, generateAntiProcrastination } from './claude'
 import { buildRothContext } from './roth-context'
 import { getFirstLessonToday } from './calendar'
-import { TELEGRAM_COMMANDS, ROTH_RULES } from './constants'
+import { TELEGRAM_COMMANDS, ROTH_RULES, TRENING_ZASTEPSTWO } from './constants'
 import type { WeeklyReviewState } from './types'
 
 // ─── Weryfikacja chat_id (ZASADA KRYTYCZNA) ───────────────────────────────
@@ -342,4 +342,124 @@ export async function handleCallbackQuery(data: string): Promise<string | null> 
     default:
       return null
   }
+}
+
+// ─── SMART SPRAWDZIANY PARSER ─────────────────────────────────────────────
+// Parsuje: "/kartkowka fizyka kolo jutro 'układ sił'"
+// Lub:     "/kartkowka lekcja 5" → auto-wykryje przedmiot z PLAN_LEKCJI
+export async function handleKartkowka(raw: string, commandType: string): Promise<string> {
+  const { getLessonPlan, appendRow } = await import('./sheets')
+  const { SHEETS } = await import('./constants')
+
+  // Oczyść komendę
+  const text = raw.replace(/^\/\w+\s*/, '').trim().toLowerCase()
+  if (!text) {
+    return `📝 *Szybki zapis sprawdzianu*\n\nUżycie:\n\`/kartkowka fizyka jutro "układ sił"\`\n\`/kartkowka lekcja 5\` (auto-wykryje przedmiot z planu)\n\`/sprawdzian matematyka piątek\`\n\`/kolo angielski środa "czasy"\``
+  }
+
+  // Wykryj datę
+  const today = new Date()
+  let targetDate = new Date(today)
+
+  if (text.includes('jutro')) {
+    targetDate.setDate(today.getDate() + 1)
+  } else if (text.includes('pojutrze')) {
+    targetDate.setDate(today.getDate() + 2)
+  } else {
+    const dayMap: Record<string, number> = {
+      'poniedzialek': 1, 'wtorek': 2, 'sroda': 3,
+      'czwartek': 4, 'piatek': 5, 'sobota': 6,
+    }
+    for (const [day, dayNum] of Object.entries(dayMap)) {
+      if (text.includes(day)) {
+        const diff = (dayNum - today.getDay() + 7) % 7 || 7
+        targetDate.setDate(today.getDate() + diff)
+        break
+      }
+    }
+  }
+
+  const dateStr = targetDate.toISOString().split('T')[0]!
+
+  // Wykryj "lekcja N" → auto-wykryj przedmiot z PLAN_LEKCJI
+  let przedmiot = ''
+  const lessonMatch = text.match(/lekcja\s+(\d+)/)
+  if (lessonMatch) {
+    const nrLekcji = parseInt(lessonMatch[1] ?? '0')
+    const dayNames = ['', 'Poniedzialek', 'Wtorek', 'Sroda', 'Czwartek', 'Piatek', 'Sobota']
+    const targetDay = dayNames[targetDate.getDay()] ?? ''
+    const plan = await getLessonPlan(targetDay)
+    const lesson = plan.find(l => l.nrLekcji === nrLekcji)
+    przedmiot = lesson?.przedmiot ?? ''
+    if (!przedmiot) {
+      return `⚠️ Nie znalazłem lekcji nr ${nrLekcji} w planie dla ${targetDay}.\nWpisz /plan_lekcji aby sprawdzić plan.`
+    }
+  }
+
+  // Jeśli brak przedmiotu z "lekcja N", szukaj nazwy przedmiotu w tekście
+  if (!przedmiot) {
+    const subjects = ['matematyka', 'fizyka', 'angielski', 'angielski', 'historia', 'biologia', 'chemia', 'informatyka', 'polski', 'wf', 'religia', 'plastyka', 'muzyka', 'geografia', 'wos']
+    for (const s of subjects) {
+      if (text.includes(s)) {
+        przedmiot = s.charAt(0).toUpperCase() + s.slice(1)
+        break
+      }
+    }
+  }
+
+  if (!przedmiot) {
+    return `⚠️ Nie wykryłem przedmiotu. Spróbuj:\n\`/kartkowka fizyka jutro\`\n\`/kartkowka lekcja 3\``
+  }
+
+  // Typ sprawdzianu
+  const typMap: Record<string, string> = {
+    'kartkowka': 'kartkówka',
+    'sprawdzian': 'sprawdzian',
+    'kolo': 'kolokwium',
+    'praca': 'praca domowa',
+  }
+  const typ = typMap[commandType] ?? 'kartkówka'
+
+  // Wyciągnij temat (w cudzysłowie lub po słowie "temat")
+  const tematMatch = text.match(/"([^"]+)"/) ?? text.match(/temat\s+(.+)/)
+  const temat = tematMatch?.[1] ?? ''
+
+  // Zapisz do SPRAWDZIANY
+  await appendRow(SHEETS.SPRAWDZIANY, [
+    przedmiot,
+    typ,
+    dateStr,
+    temat,
+    'do_nauki',
+    '',
+  ])
+
+  const displayDate = targetDate.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'short' })
+
+  return `✅ *Zapisano!*\n\n📚 ${przedmiot} — ${typ}\n📅 ${displayDate}\n${temat ? `📝 Temat: ${temat}` : '📝 Temat: (nie podano)'}\n\n_Status: do\\_nauki — zaktualizuj po przygotowaniu_`
+}
+
+// ─── ANTI-FRAGILE TRAINING ────────────────────────────────────────────────
+// Gdy trening odpada → suggest replacement
+export async function handleOpuscilTrening(typ: string): Promise<string> {
+  const typKey = typ.toLowerCase().includes('silow') ? 'silownia'
+    : typ.toLowerCase().includes('badmin') ? 'badminton'
+    : 'ogolne'
+
+  const zastepstwa = TRENING_ZASTEPSTWO[typKey] ?? TRENING_ZASTEPSTWO['ogolne'] ?? []
+  const random = zastepstwa[Math.floor(Math.random() * zastepstwa.length)] ?? 'Spacer 20 min'
+
+  const { appendRow } = await import('./sheets')
+  const { SHEETS } = await import('./constants')
+  const today = new Date().toISOString().split('T')[0]!
+  await appendRow(SHEETS.TRENINGI_LOG, [
+    today,
+    typKey,
+    'T',
+    '0',
+    'opuszczony',
+    'Opuszczony — wykonano zastępstwo',
+  ])
+
+  return `💪 *Trening opuszczony — ale nie odpuszczasz!*\n\nZastępstwo na dziś:\n*${random}*\n\n_Każdy ruch się liczy. Zrób to teraz._\n\n/koniec\\_silownia — wpisz po wykonaniu`
 }

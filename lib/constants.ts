@@ -69,22 +69,52 @@ export const SCORING_PROGI = [
   { min: 16, max: 20, label: 'Ekstremalny', opis: 'Absolutne minimum' },
 ]
 
-// ─── TRENINGI ────────────────────────────────────────────────────────────
-export const TRAINING_SCHEDULE = {
-  poniedzialek: 'Full Body Workout',
-  sroda: 'Plecy + Klata',
-  piatek: 'Barki + Klata',
+// ─── TRENINGI ─────────────────────────────────────────────────────────────
+// UWAGA: silownia_dni i badminton_dni są PRAWDZIWYMI źródłami w USTAWIENIA (Sheets)
+// Poniżej tylko defaults — edytuj przez Sheets, nie tu
+export const SILOWNIA = {
+  dni: ['poniedzialek', 'sroda', 'piatek'] as string[],  // domyślne — edytuj w Sheets
+  czasMinuty: 75,
 } as const
 
 export const BADMINTON = {
-  dzien: 'czwartek',
+  dni: ['wtorek', 'piatek'] as string[],  // edytuj w Sheets (klucz: badminton_dni)
+  dzien: 'wtorek',                         // backwards compat — pierwszy dzień z dni[]
   godzina: '19:30',
   koniec: '20:30',
   wyjazd: '19:10',
   powrot: '20:50',
 } as const
 
-export const MIN_REST_DAY_GAP = 1  // minimum 1 dzień przerwy między treningami
+// Alias — backwards compat dla stron które importują TRAINING_SCHEDULE
+export const TRAINING_SCHEDULE: Record<string, string> = {
+  poniedzialek: 'Siłownia — Full Body',
+  sroda: 'Siłownia — Plecy + Klata',
+  piatek: 'Siłownia — Barki + Klata',
+}
+
+// Anti-fragile: zastępstwo gdy trening odpada
+export const TRENING_ZASTEPSTWO: Record<string, string[]> = {
+  silownia: [
+    '20 pompek + 20 przysiadów + 20 brzuszków (15 min)',
+    'Spacer 30 min — liczy się ruch',
+    'Stretching + mobilność 20 min',
+    '3 serie planku + 3 serie pompek diamentowych',
+  ],
+  badminton: [
+    'Bieganie 20 min lub szybki marsz',
+    '20 pompek + 20 przysiadów (10 min)',
+    'Rowerek/spacer dla aktywnego odpoczynku',
+    'Stretching całego ciała 20 min',
+  ],
+  ogolne: [
+    'Spacer 20 min — minimum aktywności',
+    '10 pompek + 10 przysiadów co godzinę',
+    'Stretching 15 min przed snem',
+  ],
+}
+
+export const MIN_REST_DAY_GAP = 1
 
 // ─── PRANIE — LIMITY DNI ─────────────────────────────────────────────────
 export const PRANIE_LIMITY: Record<KategoriaPrania, number> = {
@@ -120,16 +150,83 @@ export const ANTIP = {
 
 // ─── TELEGRAM KOMENDY ────────────────────────────────────────────────────
 export const TELEGRAM_COMMANDS = [
-  { command: 'choruje', description: 'Aktywuj Tryb Aktywny-Chory' },
-  { command: 'wsiadam', description: 'Timer powrotu autobusem' },
-  { command: 'dotarlem', description: 'Potwierdzenie dotarcia' },
+  { command: 'start', description: 'Witaj w ROTH OS' },
+  { command: 'brief', description: 'Pokaż aktualny brief dnia' },
+  { command: 'kartkowka', description: 'Zapisz kartkówkę (np. /kartkowka fizyka jutro)' },
+  { command: 'sprawdzian', description: 'Zapisz sprawdzian (/sprawdzian matematyka piątek)' },
+  { command: 'kolo', description: 'Zapisz kolokwium (/kolo angielski środa)' },
+  { command: 'opuscil_trening', description: 'Trening opuszczony — dostań zastępstwo' },
   { command: 'kolega_odwola', description: 'Przelicz busy bez kolegi' },
+  { command: 'wsiadam', description: 'Wsiadam w bus — timer powrotu' },
+  { command: 'dotarlem', description: 'Potwierdzenie dotarcia' },
   { command: 'koniec_silownia', description: 'Zakończ trening siłowni' },
+  { command: 'choruje', description: 'Aktywuj Tryb Aktywny-Chory' },
   { command: 'przedluzam', description: 'Przesuń wieczorne zadania' },
   { command: 'posprzatane', description: 'Reset cyklu sprzątania' },
-  { command: 'brief', description: 'Pokaż aktualny brief' },
-  { command: 'start', description: 'Witaj w ROTH' },
 ] as const
+
+// ─── GODZINY LEKCJI (standardowy plan ZSE Śrem) ──────────────────────────
+export const LESSON_TIMES: Record<number, { od: string; do: string }> = {
+  1:  { od: '07:30', do: '08:15' },
+  2:  { od: '08:20', do: '09:05' },
+  3:  { od: '09:10', do: '09:55' },
+  4:  { od: '10:05', do: '10:50' },
+  5:  { od: '10:55', do: '11:40' },
+  6:  { od: '11:45', do: '12:30' },
+  7:  { od: '12:45', do: '13:30' },
+  8:  { od: '13:35', do: '14:20' },
+  9:  { od: '14:25', do: '15:10' },
+  10: { od: '15:20', do: '16:05' },
+  11: { od: '16:10', do: '16:55' },
+}
+
+// ─── NAZWY PRZEDMIOTÓW (skróty → pełne nazwy) ────────────────────────────
+export const PRZEDMIOT_NAZWY: Record<string, string> = {
+  'j.niem_d':                  'Język Niemiecki',
+  'PrPodsSiec':                'Pracownia Podstaw Sieci',
+  'PodsSieci':                 'Podstawy Sieci',
+  'j.polski':                  'Język Polski',
+  'PrProjOpr':                 'Pracownia Proj. Operacyjnego',
+  'matematyka':                'Matematyka',
+  'ProgApInt':                 'Programowanie Aplikacji Intern.',
+  'PrTestApli':                'Pracownia Testowania Aplikacji',
+  'AdmBaz':                    'Administracja Bazami Danych',
+  'PrBazDan':                  'Pracownia Baz Danych',
+  'j.ang_k':                   'Język Angielski',
+  'ProjOpr':                   'Projekt Operacyjny',
+  'historia':                  'Historia',
+  'historia i terazniejszosc': 'Historia i Teraźniejszość',
+  'geografia':                 'Geografia',
+  'PrGrafMulti':               'Pracownia Grafiki Multimedialnej',
+  'biologia':                  'Biologia',
+  'WF':                        'Wychowanie Fizyczne',
+  'chemia':                    'Chemia',
+  'fizyka':                    'Fizyka',
+  'matematyka rozszerzona':    'Matematyka Rozszerzona',
+  'r_angielski':               'Angielski Rozszerzony',
+  'informatyka':               'Informatyka',
+  'TestApli':                  'Testowanie Aplikacji',
+  'PrApInt':                   'Pracownia Aplikacji Intern.',
+}
+
+// Kolory kategorii przedmiotów
+export const PRZEDMIOT_KOLORY: Record<string, string> = {
+  'matematyka':             '#6366f1',
+  'matematyka rozszerzona': '#6366f1',
+  'fizyka':                 '#8b5cf6',
+  'chemia':                 '#a855f7',
+  'biologia':               '#22c55e',
+  'j.polski':               '#f59e0b',
+  'j.ang_k':                '#3b82f6',
+  'r_angielski':            '#3b82f6',
+  'j.niem_d':               '#06b6d4',
+  'historia':               '#ef4444',
+  'historia i terazniejszosc': '#ef4444',
+  'geografia':              '#f97316',
+  'WF':                     '#84cc16',
+  'informatyka':            '#14b8a6',
+  'default':                '#94a3b8',
+}
 
 // ─── SZKOŁA ──────────────────────────────────────────────────────────────
 export const SZKOLA = {

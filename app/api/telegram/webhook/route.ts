@@ -9,6 +9,7 @@ import {
   handleKoniecSilownia, handlePrzedluzam, handlePosprzatane,
   handleTextMessage, handleCallbackQuery, handleWeeklyReviewAnswer,
   startWeeklyReview, sendMessage,
+  handleKartkowka, handleOpuscilTrening,
 } from '@/lib/telegram'
 
 // Inicjalizuj bot raz
@@ -69,6 +70,25 @@ bot.command('przedluzam', async ctx => {
 
 bot.command('posprzatane', async ctx => {
   const reply = await handlePosprzatane()
+  await ctx.reply(reply, { parse_mode: 'Markdown' })
+})
+
+// ─── Smart sprawdziany parser ──────────────────────────────────────────────
+// Użycie: /kartkowka fizyka kolo jutro "układ sił"
+// Lub:    /kartkowka lekcja 5 (auto-wykryje przedmiot z PLAN_LEKCJI)
+bot.command(['kartkowka', 'sprawdzian', 'kolo', 'praca'], async ctx => {
+  const args = ctx.message?.text ?? ''
+  const type = ctx.message?.text?.split(' ')[0]?.replace('/', '') ?? 'kartkowka'
+  const reply = await handleKartkowka(args, type)
+  await ctx.reply(reply, { parse_mode: 'Markdown' })
+})
+
+// ─── Anti-fragile training ────────────────────────────────────────────────
+// Użycie: /opuscil_trening silownia (powód opcjonalny)
+bot.command('opuscil_trening', async ctx => {
+  const args = ctx.message?.text?.split(' ') ?? []
+  const typ = args[1] ?? 'ogolne'
+  const reply = await handleOpuscilTrening(typ)
   await ctx.reply(reply, { parse_mode: 'Markdown' })
 })
 

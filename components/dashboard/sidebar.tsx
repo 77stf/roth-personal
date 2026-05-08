@@ -23,6 +23,8 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard/idea-lab', label: 'Idea Lab', icon: '💡' },
   { href: '/dashboard/tajlandia', label: 'Tajlandia 🌴', icon: '🎯' },
   { href: '/dashboard/ustawienia', label: 'Ustawienia', icon: '⚙️' },
+  { href: '/dashboard/system', label: 'System', icon: '🤖' },
+  { href: '/dashboard/deploy', label: 'Deploy', icon: '🚀' },
 ]
 
 export function Sidebar() {

@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const PUBLIC_PATHS = [
   '/login',
+  '/api/auth',              // Auth endpoints — dostępne bez sesji
   '/api/telegram/webhook',  // Telegram webhook — publiczny (weryfikowany przez secret token)
   '/_next',
   '/icons',
