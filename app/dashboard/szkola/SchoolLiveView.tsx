@@ -1,6 +1,7 @@
 'use client'
 
 import type { LessonWithTime } from './page'
+import { BookOpen, Clock, AlertTriangle, PartyPopper } from 'lucide-react'
 
 interface UpcomingTest {
   przedmiot: string
@@ -32,18 +33,16 @@ function LessonBadge({ lesson, status }: { lesson: LessonWithTime; status: 'curr
       alignItems: 'center',
       gap: '12px',
       padding: '12px 16px',
-      borderRadius: '12px',
+      borderRadius: '10px',
       background: isCurrent
-        ? `${lesson.kolor}18`
-        : isDone
-          ? 'rgba(255,255,255,0.03)'
-          : 'rgba(255,255,255,0.05)',
+        ? `${lesson.kolor}12`
+        : 'var(--bg-elevated)',
       border: isCurrent
-        ? `1px solid ${lesson.kolor}60`
+        ? `1px solid ${lesson.kolor}50`
         : isNext
-          ? '1px solid rgba(255,255,255,0.12)'
-          : '1px solid rgba(255,255,255,0.05)',
-      opacity: isDone ? 0.45 : 1,
+          ? '1px solid var(--border)'
+          : '1px solid transparent',
+      opacity: isDone ? 0.5 : 1,
       position: 'relative',
       overflow: 'hidden',
       transition: 'all 0.2s',
@@ -58,18 +57,23 @@ function LessonBadge({ lesson, status }: { lesson: LessonWithTime; status: 'curr
       {/* Numer lekcji */}
       <div style={{
         width: '28px', height: '28px', borderRadius: '8px',
-        background: isCurrent ? lesson.kolor : 'rgba(255,255,255,0.08)',
+        background: isCurrent ? lesson.kolor : 'var(--bg-surface)',
+        border: isCurrent ? 'none' : '1px solid var(--border)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: '12px', fontWeight: 700, flexShrink: 0,
-        color: isCurrent ? '#fff' : 'rgba(255,255,255,0.5)',
+        color: isCurrent ? '#fff' : 'var(--text-secondary)',
       }}>
         {lesson.nr}
       </div>
 
       {/* Godzina */}
       <div style={{
-        fontSize: '11px', color: 'rgba(255,255,255,0.4)',
-        fontVariantNumeric: 'tabular-nums', flexShrink: 0, width: '90px',
+        fontSize: '11px',
+        color: 'var(--text-secondary)',
+        fontVariantNumeric: 'tabular-nums',
+        flexShrink: 0,
+        width: '90px',
+        fontFamily: 'monospace',
       }}>
         {lesson.od} – {lesson.do}
       </div>
@@ -77,13 +81,16 @@ function LessonBadge({ lesson, status }: { lesson: LessonWithTime; status: 'curr
       {/* Przedmiot */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
-          fontSize: '13px', fontWeight: isCurrent ? 600 : 500,
-          color: isCurrent ? '#fff' : 'rgba(255,255,255,0.8)',
-          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          fontSize: '13px',
+          fontWeight: isCurrent ? 600 : 500,
+          color: 'var(--text-primary)',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
         }}>
           {lesson.przedmiotPelna}
         </div>
-        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', marginTop: '2px' }}>
+        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
           sala {lesson.sala}
           {lesson.grupa !== 'cala_klasa' && ` · gr. ${lesson.grupa}`}
         </div>
@@ -94,13 +101,17 @@ function LessonBadge({ lesson, status }: { lesson: LessonWithTime; status: 'curr
         <div style={{
           display: 'flex', alignItems: 'center', gap: '5px',
           padding: '3px 8px', borderRadius: '20px',
-          background: `${lesson.kolor}25`, border: `1px solid ${lesson.kolor}50`,
-          fontSize: '10px', fontWeight: 600, color: lesson.kolor,
+          background: `${lesson.kolor}18`,
+          border: `1px solid ${lesson.kolor}40`,
+          fontSize: '10px', fontWeight: 700,
+          color: lesson.kolor,
           flexShrink: 0,
         }}>
           <span style={{
             width: '5px', height: '5px', borderRadius: '50%',
-            background: lesson.kolor, animation: 'pulse-dot 1.5s infinite',
+            background: lesson.kolor,
+            animation: 'pulse-dot 1.5s infinite',
+            display: 'inline-block',
           }} />
           TERAZ
         </div>
@@ -108,11 +119,13 @@ function LessonBadge({ lesson, status }: { lesson: LessonWithTime; status: 'curr
       {isNext && !isCurrent && (
         <div style={{
           padding: '3px 8px', borderRadius: '20px',
-          background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
-          fontSize: '10px', fontWeight: 600, color: 'rgba(255,255,255,0.4)',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border)',
+          fontSize: '10px', fontWeight: 600,
+          color: 'var(--text-secondary)',
           flexShrink: 0,
         }}>
-          NASTĘPNA
+          NASTEPNA
         </div>
       )}
     </div>
@@ -129,12 +142,8 @@ export default function SchoolLiveView({
   }
   const nowMins = timeToMins(currentTime)
 
-  const schoolDone = !isWeekend && todayLessons.length > 0 && (
-    !nextLesson && !currentLesson
-  )
-  const schoolNotStarted = !isWeekend && todayLessons.length > 0 && (
-    !currentLesson && nextLesson?.nr === todayLessons[0]?.nr
-  )
+  const schoolDone = !isWeekend && todayLessons.length > 0 && !nextLesson && !currentLesson
+  const schoolNotStarted = !isWeekend && todayLessons.length > 0 && !currentLesson && nextLesson?.nr === todayLessons[0]?.nr
 
   return (
     <>
@@ -143,69 +152,48 @@ export default function SchoolLiveView({
           0%, 100% { opacity: 1; }
           50% { opacity: 0.3; }
         }
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
       `}</style>
 
-      <div style={{
-        padding: '24px 20px', maxWidth: '760px', margin: '0 auto',
-        animation: 'fade-in 0.3s ease',
-      }}>
-        {/* ── HEADER ──────────────────────────────────────────────────────── */}
-        <div style={{ marginBottom: '28px' }}>
-          <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px' }}>
-            Szkoła · 3PB · Gr. 2/2
+      <div style={{ padding: '24px', maxWidth: '760px' }} className="fade-in">
+        {/* HEADER */}
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>
+            Szkola · 3PB · Gr. 2/2
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px' }}>
-            <div style={{ fontSize: '28px', fontWeight: 700, color: '#fff' }}>
+            <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)' }}>
               {isWeekend ? 'Weekend' : todayName}
-            </div>
-            <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.35)', fontVariantNumeric: 'tabular-nums' }}>
+            </h1>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums', fontFamily: 'monospace' }}>
               {currentTime}
             </div>
           </div>
         </div>
 
-        {/* ── WEEKEND MESSAGE ─────────────────────────────────────────────── */}
+        {/* WEEKEND */}
         {isWeekend && (
-          <div style={{
-            padding: '24px', borderRadius: '16px',
-            background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))',
-            border: '1px solid rgba(99,102,241,0.2)',
-            textAlign: 'center', marginBottom: '24px',
-          }}>
-            <div style={{ fontSize: '32px', marginBottom: '8px' }}>🏖️</div>
-            <div style={{ fontSize: '18px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>Weekend!</div>
-            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>
-              Czas na OFM, AI Consulting lub Tajlandię 🇹🇭
+          <div className="card" style={{ textAlign: 'center', marginBottom: '24px', padding: '32px' }}>
+            <PartyPopper size={32} style={{ color: 'var(--accent-purple)', margin: '0 auto 12px' }} />
+            <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '6px' }}>
+              Weekend!
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+              Czas na OFM, AI Consulting lub Tajlandi
             </div>
           </div>
         )}
 
-        {/* ── LIVE STATUS CARDS (tylko dni robocze) ───────────────────────── */}
+        {/* LIVE STATUS CARDS */}
         {!isWeekend && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
             {/* Aktualna lekcja */}
-            <div style={{
-              padding: '20px',
-              borderRadius: '16px',
-              background: currentLesson
-                ? `linear-gradient(135deg, ${currentLesson.kolor}20, ${currentLesson.kolor}08)`
-                : schoolDone
-                  ? 'rgba(34,197,94,0.08)'
-                  : 'rgba(255,255,255,0.04)',
-              border: currentLesson
-                ? `1px solid ${currentLesson.kolor}40`
-                : schoolDone
-                  ? '1px solid rgba(34,197,94,0.2)'
-                  : '1px solid rgba(255,255,255,0.06)',
+            <div className="card" style={{
+              borderLeft: currentLesson ? `3px solid ${currentLesson.kolor}` : schoolDone ? '3px solid var(--accent-green)' : '3px solid var(--border)',
             }}>
               <div style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
                 fontSize: '11px', fontWeight: 600, textTransform: 'uppercase',
-                letterSpacing: '0.08em', color: 'rgba(255,255,255,0.4)',
+                letterSpacing: '0.08em', color: 'var(--text-secondary)',
                 marginBottom: '12px',
               }}>
                 {currentLesson && (
@@ -221,16 +209,17 @@ export default function SchoolLiveView({
 
               {currentLesson ? (
                 <>
-                  <div style={{ fontSize: '15px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
                     {currentLesson.przedmiotPelna}
                   </div>
-                  <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
                     {currentLesson.od} – {currentLesson.do} · sala {currentLesson.sala}
                   </div>
                   <div style={{
                     display: 'inline-flex', alignItems: 'center',
                     padding: '3px 10px', borderRadius: '20px',
-                    background: `${currentLesson.kolor}20`,
+                    background: `${currentLesson.kolor}15`,
+                    border: `1px solid ${currentLesson.kolor}30`,
                     fontSize: '11px', fontWeight: 600, color: currentLesson.kolor,
                   }}>
                     Lekcja {currentLesson.nr}
@@ -238,102 +227,94 @@ export default function SchoolLiveView({
                 </>
               ) : schoolDone ? (
                 <>
-                  <div style={{ fontSize: '18px', marginBottom: '4px' }}>✅</div>
-                  <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(34,197,94,0.9)' }}>
-                    Szkoła skończona
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--accent-green)', marginBottom: '4px' }}>
+                    Szkola skonczona
                   </div>
-                  <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginTop: '4px' }}>
-                    Czas na projekty!
-                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Czas na projekty!</div>
                 </>
               ) : schoolNotStarted ? (
                 <>
-                  <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>
-                    Szkoła jeszcze się nie zaczęła
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                    Jeszcze sie nie zaczela
                   </div>
-                  <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginTop: '4px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                     Pierwsza lekcja: {todayLessons[0]?.od}
                   </div>
                 </>
               ) : (
-                <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)' }}>
-                  Brak lekcji
-                </div>
+                <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Brak lekcji</div>
               )}
             </div>
 
-            {/* Następna lekcja */}
-            <div style={{
-              padding: '20px', borderRadius: '16px',
-              background: nextLesson
-                ? `rgba(255,255,255,0.05)`
-                : 'rgba(255,255,255,0.03)',
-              border: nextLesson
-                ? '1px solid rgba(255,255,255,0.1)'
-                : '1px solid rgba(255,255,255,0.05)',
-            }}>
+            {/* Nastepna lekcja */}
+            <div className="card">
               <div style={{
                 fontSize: '11px', fontWeight: 600, textTransform: 'uppercase',
-                letterSpacing: '0.08em', color: 'rgba(255,255,255,0.4)',
+                letterSpacing: '0.08em', color: 'var(--text-secondary)',
                 marginBottom: '12px',
               }}>
-                Następna lekcja
+                Nastepna lekcja
               </div>
 
               {nextLesson ? (
                 <>
-                  <div style={{ fontSize: '15px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
                     {nextLesson.przedmiotPelna}
                   </div>
-                  <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
                     {nextLesson.od} – {nextLesson.do} · sala {nextLesson.sala}
                   </div>
                   <div style={{
-                    display: 'inline-flex',
+                    display: 'inline-flex', alignItems: 'center', gap: '4px',
                     padding: '3px 10px', borderRadius: '20px',
-                    background: 'rgba(255,255,255,0.08)',
-                    fontSize: '11px', color: 'rgba(255,255,255,0.5)',
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border)',
+                    fontSize: '11px', color: 'var(--text-secondary)',
                   }}>
+                    <Clock size={10} />
                     Za {timeToMins(nextLesson.od) - nowMins} min
                   </div>
                 </>
               ) : (
-                <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.35)' }}>
-                  {schoolDone ? 'Koniec na dziś 🎉' : 'Brak następnej'}
+                <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                  {schoolDone ? 'Koniec na dzis' : 'Brak nastepnej'}
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* ── SPRAWDZIANY ALERT ────────────────────────────────────────────── */}
+        {/* SPRAWDZIANY ALERT */}
         {upcomingTests.length > 0 && (
           <div style={{
-            padding: '16px', borderRadius: '12px', marginBottom: '20px',
-            background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
+            padding: '14px 16px',
+            borderRadius: '10px',
+            marginBottom: '20px',
+            background: 'rgba(255, 59, 48, 0.06)',
+            border: '1px solid rgba(255, 59, 48, 0.2)',
           }}>
             <div style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
               fontSize: '11px', fontWeight: 700, textTransform: 'uppercase',
-              letterSpacing: '0.08em', color: 'rgba(239,68,68,0.8)', marginBottom: '10px',
+              letterSpacing: '0.08em', color: 'var(--accent-red)',
+              marginBottom: '10px',
             }}>
-              ⚡ Nadchodzące sprawdziany
+              <AlertTriangle size={13} />
+              Nadchodzace sprawdziany
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {upcomingTests.map((t, i) => (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'center', gap: '10px',
-                  fontSize: '13px',
-                }}>
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
                   <span style={{
                     padding: '2px 8px', borderRadius: '6px',
-                    background: 'rgba(239,68,68,0.15)',
-                    fontSize: '10px', fontWeight: 700, color: 'rgba(239,68,68,0.9)',
+                    background: 'rgba(255, 59, 48, 0.1)',
+                    fontSize: '10px', fontWeight: 700, color: 'var(--accent-red)',
                   }}>
                     {t.typ.toUpperCase()}
                   </span>
-                  <span style={{ color: '#fff', fontWeight: 600 }}>{t.przedmiot}</span>
-                  {t.temat && <span style={{ color: 'rgba(255,255,255,0.4)' }}>— {t.temat}</span>}
-                  <span style={{ marginLeft: 'auto', fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{t.przedmiot}</span>
+                  {t.temat && <span style={{ color: 'var(--text-secondary)' }}>— {t.temat}</span>}
+                  <span style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
                     {t.data}
                   </span>
                 </div>
@@ -342,17 +323,19 @@ export default function SchoolLiveView({
           </div>
         )}
 
-        {/* ── PLAN DNIA (timeline) ─────────────────────────────────────────── */}
+        {/* PLAN DNIA */}
         {!isWeekend && todayLessons.length > 0 && (
-          <div style={{ marginBottom: '32px' }}>
+          <div style={{ marginBottom: '28px' }}>
             <div style={{
-              fontSize: '12px', fontWeight: 600, textTransform: 'uppercase',
-              letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)',
-              marginBottom: '12px',
+              fontSize: '11px', fontWeight: 600, textTransform: 'uppercase',
+              letterSpacing: '0.08em', color: 'var(--text-secondary)',
+              marginBottom: '10px',
+              display: 'flex', alignItems: 'center', gap: '6px',
             }}>
+              <BookOpen size={13} />
               Plan dnia — {todayName}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               {todayLessons.map(lesson => {
                 const isCurrent = currentLesson?.nr === lesson.nr
                 const isNextL = nextLesson?.nr === lesson.nr
@@ -370,14 +353,16 @@ export default function SchoolLiveView({
           </div>
         )}
 
-        {/* ── PLAN JUTRA ───────────────────────────────────────────────────── */}
+        {/* PLAN JUTRA */}
         {tomorrowLessons.length > 0 && (
           <div>
             <div style={{
-              fontSize: '12px', fontWeight: 600, textTransform: 'uppercase',
-              letterSpacing: '0.08em', color: 'rgba(255,255,255,0.25)',
-              marginBottom: '12px',
+              fontSize: '11px', fontWeight: 600, textTransform: 'uppercase',
+              letterSpacing: '0.08em', color: 'var(--text-secondary)',
+              marginBottom: '10px',
+              display: 'flex', alignItems: 'center', gap: '6px',
             }}>
+              <BookOpen size={13} />
               Jutro — {tomorrowName}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -388,18 +373,15 @@ export default function SchoolLiveView({
           </div>
         )}
 
-        {/* ── NO SCHOOL DAY ───────────────────────────────────────────────── */}
+        {/* NO SCHOOL */}
         {!isWeekend && todayLessons.length === 0 && (
-          <div style={{
-            padding: '24px', borderRadius: '16px', textAlign: 'center',
-            background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-          }}>
-            <div style={{ fontSize: '24px', marginBottom: '8px' }}>📋</div>
-            <div style={{ fontSize: '15px', fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: '4px' }}>
+          <div className="card" style={{ textAlign: 'center', padding: '32px' }}>
+            <BookOpen size={28} style={{ color: 'var(--text-secondary)', margin: '0 auto 10px' }} />
+            <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
               Brak lekcji w planie
             </div>
-            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>
-              Sprawdź zastępstwa na stronie szkoły
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+              Sprawdz zastepstwa na stronie szkoly
             </div>
           </div>
         )}

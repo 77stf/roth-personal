@@ -185,7 +185,7 @@ const INTEGRATIONS: Integration[] = [
     icon: '▲',
     name: 'Vercel',
     tagline: 'Deployment · Edge · CDN',
-    color: '#ffffff',
+    color: '#1D1D1F',
     what: 'Vercel hostuje ROTH Personal OS. Każdy push na master = automatyczny deployment. Edge runtime dla middleware.',
     capabilities: [
       'Auto-deploy z git push',
@@ -316,7 +316,7 @@ export default function UstawieniaPage() {
                 <div style={{
                   fontSize: '28px',
                   marginBottom: '10px',
-                  filter: integration.id === 'vercel' ? 'invert(1)' : 'none',
+                  filter: 'none',
                 }}>
                   {integration.icon}
                 </div>
