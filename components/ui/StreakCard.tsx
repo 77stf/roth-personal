@@ -11,39 +11,42 @@ interface StreakCardProps {
 
 function WeekDots({ lastDate, count }: { lastDate?: string; count: number }) {
   const today = new Date()
-  const days: boolean[] = []
+  today.setHours(0, 0, 0, 0)
 
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(today)
-    d.setDate(today.getDate() - i)
-    const dateStr = d.toISOString().split('T')[0]!
-
-    if (!lastDate) {
-      days.push(false)
-      continue
-    }
-    const last = new Date(lastDate)
-    const diff = Math.floor((d.getTime() - last.getTime()) / (1000 * 60 * 60 * 24))
-    // Simple heuristic: mark as done if within streak range
-    days.push(diff <= 0 && diff > -count)
-  }
+  const lastMs = lastDate ? new Date(lastDate).getTime() : NaN
+  const lastValid = !isNaN(lastMs)
 
   return (
     <div style={{ display: 'flex', gap: '3px' }}>
-      {days.map((done, i) => (
-        <div key={i} style={{
-          width: 14, height: 14, borderRadius: 3,
-          background: done ? 'var(--accent-green)' : 'var(--bg-elevated)',
-          border: `1px solid ${done ? 'rgba(52,199,89,0.3)' : 'var(--border)'}`,
-        }} />
-      ))}
+      {Array.from({ length: 7 }, (_, i) => {
+        // i=0 is 6 days ago, i=6 is today
+        const dayOffset = i - 6
+        const dayMs = today.getTime() + dayOffset * 86400000
+
+        let done = false
+        if (lastValid && count > 0) {
+          // days from this dot to lastDate (positive = dot is before lastDate)
+          const daysFromDot = Math.round((lastMs - dayMs) / 86400000)
+          // dot is "done" if it falls within the streak window ending at lastDate
+          done = daysFromDot >= 0 && daysFromDot < count
+        }
+
+        return (
+          <div key={i} style={{
+            width: 14, height: 14, borderRadius: 3,
+            background: done ? 'var(--accent-green)' : 'var(--bg-elevated)',
+            border: `1px solid ${done ? 'rgba(52,199,89,0.3)' : 'var(--border)'}`,
+          }} />
+        )
+      })}
     </div>
   )
 }
 
 export function StreakCard({ streak }: StreakCardProps) {
   const fireEmoji = streak.count >= 7 ? '🔥🔥' : streak.count >= 3 ? '🔥' : '✓'
-  const pct = Math.min(100, Math.round((streak.count / 30) * 100))
+  const scale = Math.max(streak.best, 30)
+  const pct = Math.min(100, Math.round((streak.count / scale) * 100))
 
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>

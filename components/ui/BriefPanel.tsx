@@ -28,7 +28,7 @@ export function BriefPanel({ title, date, frog, sections, emptyMessage }: BriefP
         <div style={{ color: '#6E6E73', fontSize: '13px' }}>{emptyMessage}</div>
       ) : (
         sections.map((section, i) => (
-          <div key={i} style={{ marginBottom: i < sections.length - 1 ? '14px' : 0 }}>
+          <div key={section.heading} style={{ marginBottom: i < sections.length - 1 ? '14px' : 0 }}>
             <div style={{
               fontSize: '10px',
               letterSpacing: '0.08em',
@@ -41,7 +41,7 @@ export function BriefPanel({ title, date, frog, sections, emptyMessage }: BriefP
               {section.heading}
             </div>
             {section.lines.map((line, j) => (
-              <div key={j} style={{ color: '#E8E8ED', lineHeight: 1.7 }}>
+              <div key={`${section.heading}-${j}`} style={{ color: '#E8E8ED', lineHeight: 1.7 }}>
                 {line}
               </div>
             ))}
