@@ -10,7 +10,18 @@ import { InlineKeyboard } from 'grammy'
 const COOLDOWN_MS = 4 * 60 * 60 * 1000
 const KEY = 'brief_last_sleep'
 
+function isAuthorized(req: NextRequest): boolean {
+  const secret = process.env['CRON_SECRET']
+  if (!secret) return true
+  const auth = req.headers.get('authorization') ?? req.headers.get('x-cron-secret') ?? ''
+  return auth === `Bearer ${secret}` || auth === secret
+}
+
 export async function POST(req: NextRequest) {
+  if (!isAuthorized(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const now = Date.now()
   const lastStr = await getUstawienie(KEY)
   const last = lastStr ? parseInt(lastStr, 10) : 0
@@ -21,19 +32,15 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const body = await req.json().catch(() => ({})) as { sendTelegram?: boolean }
-
     const protocol = await generatePreSleepFull()
 
-    if (body.sendTelegram) {
-      const keyboard = new InlineKeyboard()
-        .text('Kończę zadanie', 'sleep:task')
-        .text('Idę spać', 'sleep:now')
-        .text('Jeszcze 1h', 'sleep:hour')
-      await sendMessage(protocol, keyboard)
-      await setUstawienie(KEY, String(now), 'ostatni sleep brief')
-    }
+    const keyboard = new InlineKeyboard()
+      .text('Kończę zadanie', 'sleep:task')
+      .text('Idę spać', 'sleep:now')
+      .text('Jeszcze 1h', 'sleep:hour')
 
+    await sendMessage(protocol, keyboard)
+    await setUstawienie(KEY, String(now), 'ostatni sleep brief')
     return NextResponse.json({ success: true, data: protocol })
   } catch (error) {
     const msg = error instanceof Error ? error.message : 'Błąd'

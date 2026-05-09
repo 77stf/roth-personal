@@ -6,7 +6,18 @@ import { getUstawienie, setUstawienie } from '@/lib/sheets'
 const COOLDOWN_MS = 4 * 60 * 60 * 1000
 const KEY = 'brief_last_evening'
 
+function isAuthorized(req: NextRequest): boolean {
+  const secret = process.env['CRON_SECRET']
+  if (!secret) return true
+  const auth = req.headers.get('authorization') ?? req.headers.get('x-cron-secret') ?? ''
+  return auth === `Bearer ${secret}` || auth === secret
+}
+
 export async function POST(req: NextRequest) {
+  if (!isAuthorized(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const now = Date.now()
   const lastStr = await getUstawienie(KEY)
   const last = lastStr ? parseInt(lastStr, 10) : 0
@@ -30,7 +41,7 @@ export async function POST(req: NextRequest) {
       notDoneTasksText: body.notDoneTasksText,
     })
 
-    if (body.sendTelegram) {
+    if (body.sendTelegram !== false) {
       await sendMessage(brief)
     }
 
