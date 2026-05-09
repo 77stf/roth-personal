@@ -7,6 +7,7 @@ import { getCytat, getAktywneReki, getBudzet, getPranieLog, getSprzatanieLog, ge
 import { getTomorrowEvents, getFirstLessonToday } from './calendar'
 import { obliczScoring, getCurrentEnergyZone, minutesUntilSleep, getOptimalSleepTime } from './scoring'
 import { getSprawdziany } from './sheets'
+import { getStreaks } from './streaks'
 import { SHEETS, LESSON_TIMES } from './constants'
 import type { TransportRecommendation } from './types'
 
@@ -34,6 +35,14 @@ function formatTasks(openTasks: string): string {
     if (!m) return `🟢 ${t}`
     return `${PRIORITY_EMOJI[m[1]!] ?? '🟢'} ${m[2]}`
   }).join('\n')
+}
+
+function extractFrog(openTasks: string): string | null {
+  if (!openTasks || openTasks === 'Brak otwartych zadań') return null
+  const tasks = openTasks.split(', ')
+  const red = tasks.find(t => t.match(/\[red\]/))
+  if (!red) return null
+  return red.match(/\[red\] (.+)/)?.[1] ?? null
 }
 
 function formatDateShort(date: Date): string {
@@ -78,6 +87,12 @@ export async function generateMorningBriefFull(options?: {
   // Linia 1 — nagłówek
   let msg = `☀️ *PORANNY BRIEF — ${ctx.dayOfWeek} ${dateStr}*\n`
   msg += `\`${scoringBar(num)}\` *${num}/20* · ${label}\n\n`
+
+  // Eat the Frog — jedno najważniejsze zadanie
+  const frog = extractFrog(ctx.openTasks)
+  if (frog) {
+    msg += `🐸 *EAT THE FROG*\n_Zrób to PIERWSZE, zanim cokolwiek innego:_\n*${frog}*\n\n`
+  }
 
   // Pogoda
   msg += `${pogodaLine(pogoda.temperatura, pogoda.odczucie, pogoda.opis, pogoda.opad)}\n`
@@ -142,7 +157,7 @@ export async function generateEveningBriefFull(options?: {
   const today = now.toISOString().split('T')[0]!
   const dateStr = formatDateShort(now)
 
-  const [ctx, jutroEventy, pranieLog, sprzatanieLog, leki, waterToday, zadaniaRows] = await Promise.all([
+  const [ctx, jutroEventy, pranieLog, sprzatanieLog, leki, waterToday, zadaniaRows, streaks] = await Promise.all([
     buildRothContext(),
     getTomorrowEvents(),
     getPranieLog(),
@@ -150,6 +165,7 @@ export async function generateEveningBriefFull(options?: {
     getAktywneReki(),
     getWaterToday(),
     readSheet(SHEETS.ZADANIA_DNIA).catch(() => [] as string[][]),
+    getStreaks().catch(() => []),
   ])
 
   // Zadania dziś — done vs not done
@@ -217,6 +233,17 @@ export async function generateEveningBriefFull(options?: {
     msg += `🏖 Wolny dzień\n`
   }
   msg += '\n'
+
+  // Streaki
+  const activeStreaks = streaks.filter(s => s.count > 0)
+  if (activeStreaks.length > 0) {
+    msg += `*STREAKI*\n`
+    activeStreaks.forEach(s => {
+      const fire = s.count >= 7 ? '🔥🔥' : s.count >= 3 ? '🔥' : '✅'
+      msg += `${fire} ${s.nawyk}: *${s.count}d* (rekord: ${s.best}d)\n`
+    })
+    msg += '\n'
+  }
 
   // Dom
   msg += `*DOM*\n`

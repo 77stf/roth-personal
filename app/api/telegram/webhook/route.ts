@@ -185,6 +185,17 @@ bot.command('streak', async ctx => {
 
 // ─── Google Tasks ──────────────────────────────────────────────────────────
 // Użycie: /tasks
+// ─── Brief kill switch ─────────────────────────────────────────────────────
+bot.command('pause_briefs', async ctx => {
+  await setUstawienie('briefs_paused', '1', 'briefy wstrzymane przez usera')
+  await ctx.reply('⏸ *Briefy wstrzymane.* Wpisz /resume\\_briefs aby wznowić.', { parse_mode: 'Markdown' })
+})
+
+bot.command('resume_briefs', async ctx => {
+  await setUstawienie('briefs_paused', '0', 'briefy wznowione przez usera')
+  await ctx.reply('▶️ *Briefy wznowione.* Morning 07:00, Evening 20:00, Sleep 23:00.', { parse_mode: 'Markdown' })
+})
+
 bot.command('tasks', async ctx => {
   await ctx.reply('⏳ Pobieram zadania...')
   const { getTodayTasks, formatTasksForTelegram } = await import('@/lib/google-tasks')

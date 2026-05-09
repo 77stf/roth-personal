@@ -20,6 +20,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const paused = await getUstawienie('briefs_paused')
+  if (paused === '1') {
+    return NextResponse.json({ skipped: true, reason: 'Briefy wstrzymane — /resume_briefs aby wznowić' })
+  }
+
   const now = Date.now()
   const lastStr = await getUstawienie(KEY)
   const last = lastStr ? parseInt(lastStr, 10) : 0
