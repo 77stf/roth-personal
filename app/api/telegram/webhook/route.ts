@@ -83,6 +83,48 @@ bot.command(['kartkowka', 'sprawdzian', 'kolo', 'praca'], async ctx => {
   await ctx.reply(reply, { parse_mode: 'Markdown' })
 })
 
+// ─── OFM Quick Brief ─────────────────────────────────────────────────────
+// /ofm — uruchamia agenty i wysyła TOP PRIORYTET + 1 content idea
+bot.command('ofm', async ctx => {
+  await ctx.reply('🤖 Analizuję Azul... (~30s)', { parse_mode: 'Markdown' })
+  try {
+    const res = await fetch(`${process.env['NEXT_PUBLIC_APP_URL'] ?? 'http://localhost:3000'}/api/agents/ofm`, {
+      method: 'POST',
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const report = await res.json()
+    const { dailyPlan } = report
+
+    const topPriority = dailyPlan.topPriority || '—'
+    const idea = dailyPlan.contentIdeas?.[0]
+    const reddit = dailyPlan.redditPosts?.[0]
+    const rev = dailyPlan.revenueProjection
+
+    let msg = `🔥 *OFM Daily Brief — Azul*\n\n`
+    msg += `⚡ *TOP PRIORYTET:* ${topPriority}\n\n`
+
+    if (idea) {
+      msg += `📸 *Content:* ${idea.concept}\n`
+      if (idea.bestTime) msg += `🕐 Najlepsza pora: ${idea.bestTime}\n`
+      msg += '\n'
+    }
+
+    if (reddit) {
+      msg += `🔴 *Reddit:* r/${reddit.subreddit}\n_${reddit.title}_\n\n`
+    }
+
+    if (rev) {
+      const pln = (rev.currentMRR * 4.05).toFixed(0)
+      msg += `💰 MRR: $${rev.currentMRR} (${pln} PLN) | Break-even: ${rev.breakEvenMonths}m\n`
+      msg += `🌴 Do Tajlandii: ${rev.monthsToThailand} miesięcy\n`
+    }
+
+    await ctx.reply(msg, { parse_mode: 'Markdown' })
+  } catch (e) {
+    await ctx.reply(`❌ Błąd agentów OFM: ${String(e)}`)
+  }
+})
+
 // ─── Anti-fragile training ────────────────────────────────────────────────
 // Użycie: /opuscil_trening silownia (powód opcjonalny)
 bot.command('opuscil_trening', async ctx => {

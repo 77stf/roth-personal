@@ -155,6 +155,7 @@ export const TELEGRAM_COMMANDS = [
   { command: 'kartkowka', description: 'Zapisz kartkówkę (np. /kartkowka fizyka jutro)' },
   { command: 'sprawdzian', description: 'Zapisz sprawdzian (/sprawdzian matematyka piątek)' },
   { command: 'kolo', description: 'Zapisz kolokwium (/kolo angielski środa)' },
+  { command: 'ofm', description: 'OFM Daily Brief — Azul content + Reddit + revenue' },
   { command: 'opuscil_trening', description: 'Trening opuszczony — dostań zastępstwo' },
   { command: 'kolega_odwola', description: 'Przelicz busy bez kolegi' },
   { command: 'wsiadam', description: 'Wsiadam w bus — timer powrotu' },
@@ -283,6 +284,8 @@ export const SHEETS = {
   CYTATY: 'CYTATY',
   USTAWIENIA: 'USTAWIENIA',
   ZADANIA_DNIA: 'ZADANIA_DNIA',
+  DIET_LOG: 'DIET_LOG',
+  SYSTEM_LOG: 'SYSTEM_LOG',
 } as const
 
 export type SheetName = (typeof SHEETS)[keyof typeof SHEETS]
