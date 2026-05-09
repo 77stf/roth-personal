@@ -90,24 +90,39 @@ export async function sendMessage(text: string, keyboard?: InlineKeyboard): Prom
 // ─── Handlery komend ──────────────────────────────────────────────────────
 
 export async function handleStart(): Promise<string> {
-  return `Witaj w *ROTH Personal OS* 🔥
+  return `*ROTH Personal OS* 🔥
 
-Jestem Twoim osobistym asystentem AI.
+*Briefy*
+/brief — generuj teraz
+/pause\\_briefs — wstrzymaj automatyczne
+/resume\\_briefs — wznów automatyczne
 
-*Komendy:*
-/brief — aktualny brief
-/choruje — tryb aktywny-chory
+*Szkoła & Transport*
 /wsiadam — timer powrotu autobusem
 /dotarlem — potwierdzenie dotarcia
-/kolega_odwola — przelicz busy
-/koniec_silownia — zakończ trening
-/przedluzam [min] — przesuń wieczorne zadania
+/kolega\\_odwola — jedź bez kolegi
+/kartkowka — dodaj kartkówkę
+/sprawdzian — dodaj sprawdzian
+
+*Trening & Zdrowie*
+/koniec\\_silownia [min] — zakończ trening
+/opuscil\\_trening [typ] — nieobecność
+/choruje — tryb aktywny-chory
+
+*Produktywność*
+/tasks — zadania na dziś (3/3/3)
+/streak [nawyk] — loguj streak
+/pomo [zadanie] — Pomodoro 25min
+
+*Dom & Finanse*
 /posprzatane — reset sprzątania
+/przedluzam [min] — przesuń zadania
 
-*Szybkie dodawanie:*
-\`wydatek 45 zl jedzenie\`
+*OFM & AI*
+/ofm — OFM brief Azul
 
-Wielki Cel: kilka modelek + AI Consulting + *Tajlandia* 🌴`
+Napisz cokolwiek → Master Agent 🤖
+🌴 Cel: Tajlandia`
 }
 
 export async function handleBrief(): Promise<string> {

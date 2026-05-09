@@ -1,0 +1,24 @@
+name: Sleep Brief Cron
+
+on:
+  schedule:
+    # 23:00 Warsaw (CEST = UTC+2 summer / CET = UTC+1 winter)
+    - cron: '0 21 * * *'   # lato (maj-październik) — 23:00 CEST
+  workflow_dispatch:        # ręczne uruchomienie z GitHub UI
+
+jobs:
+  trigger-sleep-brief:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger sleep brief
+        run: |
+          response=$(curl -s -o /tmp/resp.txt -w "%{http_code}" \
+            -X POST https://roth-personal.vercel.app/api/briefings/sleep \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{}')
+          echo "Status: $response"
+          cat /tmp/resp.txt
+          if [ "$response" != "200" ]; then
+            echo "::warning::Sleep brief returned $response"
+          fi
