@@ -2,10 +2,7 @@
   "framework": "nextjs",
   "buildCommand": "next build",
   "outputDirectory": ".next",
-  "env": {
-    "TZ": "Europe/Warsaw"
-  },
-  "functions": {
+"functions": {
     "app/api/agents/obsidian/route.ts": { "maxDuration": 60 },
     "app/api/agents/ofm/route.ts": { "maxDuration": 60 },
     "app/api/briefings/morning/route.ts": { "maxDuration": 30 },
