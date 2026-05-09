@@ -2,7 +2,7 @@
 title: "ROTH OS — Team Agentów"
 type: meta
 created: 2026-05-09
-updated: 2026-05-09
+updated: 2026-05-10
 tags: ["meta", "agents", "system"]
 ---
 
@@ -54,3 +54,43 @@ AI prompty → claude-api skill
 4. `frontend-developer` → UI
 5. `security-reviewer` → audit
 6. `typescript-reviewer` → jakość kodu
+
+---
+
+## Dodatkowi agenci (pełna lista)
+
+| Agent | Specjalizacja |
+|-------|---------------|
+| `agent-organizer` | Multi-agent team design — OFM orchestrator |
+| `architect` | System-level design, architectural decisions |
+| `microservices-architect` | Distributed systems, service decomposition |
+| `workflow-orchestrator` | Multi-step workflows z error handling |
+| `performance-optimizer` | Slow routes, bundle size, memory |
+| `DevOps Automator` | GitHub Actions, CI/CD, infrastruktura |
+| `MCP Builder` | Tworzenie MCP servers dla Claude |
+| `AI Engineer` | Anthropic SDK, model pipelines, tool_use |
+| `e2e-runner` | Playwright end-to-end testy |
+| `tdd-guide` | Test-Driven Development |
+| `refactor-cleaner` | Dead code removal, depcheck, knip |
+| `doc-updater` | CODEMAPS, README po zmianach |
+
+## Zasada po każdej wiadomości
+
+Claude Code **zawsze** podaje sekcję "Agenci do użycia teraz" z konkretnymi agentami pasującymi do aktualnego kontekstu. Uruchamiasz przez Claude Code UI (wpisz /nazwa-agenta) lub terminal.
+
+## OFM Multi-Agent System (w budowie)
+
+Osobny system od ROTH Life OS, ale połączony.
+Patrz: [[02_Projects/OFM-Expert-System]]
+
+Orchestrator → woła sub-agentów per kanał:
+- Reddit Expert, Instagram Expert, Chatting Expert (priorytet)
+- General Official, Twitter, Model Recruitment
+- AI, OFTV, YouTube, TikTok, Threads, Fetlife, GG's
+
+Token logging → AGENT_USAGE sheet → dashboard /analytics
+
+## Video Processing Pipeline
+
+claude-video (github.com/bradautomates/claude-video) → przetwarza wideo Hadiego → Obsidian.
+Patrz: [[02_Projects/Video-Processing-Pipeline]]

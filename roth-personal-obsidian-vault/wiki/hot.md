@@ -1,34 +1,43 @@
 ---
 type: meta
 title: "Hot Cache"
-updated: 2026-05-08T16:30:00
+updated: 2026-05-10T00:00:00
 ---
 
 # Recent Context
 
 ## Last Updated
-2026-05-08. Sesja 4 ZAKOŃCZONA — plan lekcji wgrany, live school dashboard, agent system, error monitoring.
+2026-05-10. Sesja 7 — brief spam fix, brief redesign, GitHub Actions sleep brief, OFM system plan, UI/UX design spec.
 
-## Key Recent Facts
-- PLAN_LEKCJI wgrany: 33 lekcje (Pon:7, Wt:9, Śr:6, Czw:7, Pt:4), klasa 3PB, gr. 2/2, WF 3/3, bez religii
-- Live School Dashboard: aktualna lekcja + następna lekcja + timeline z kolorami + sprawdziany alert
-- Multi-Agent Obsidian System: Orchestrator → StructureAuditor + ContentDeveloper + Planner + TeamEvaluator
-- System Dashboard (/dashboard/system): health checks, agent team, scoring, rekomendacje nowych ról
-- Error monitoring: lib/logger.ts (Sheets LOG + Make.com webhook + email) + /api/system/health
-- Nowe Telegram: /kartkowka, /sprawdzian, /kolo, /opuscil_trening
-- LESSON_TIMES + PRZEDMIOT_NAZWY + PRZEDMIOT_KOLORY dodane do constants.ts
+## Key Recent Facts (sesja 6-7)
 
-## Recent Changes
-- Created: app/dashboard/szkola/SchoolLiveView.tsx (live, portfolio-quality)
-- Created: app/dashboard/system/page.tsx (agent team monitoring)
-- Created: lib/agents.ts (4 Obsidian agents + orchestrator)
-- Created: app/api/agents/obsidian/route.ts (orchestration endpoint)
-- Created: lib/logger.ts (error monitoring + health checks)
-- Created: app/api/system/health/route.ts
-- Updated: lib/constants.ts (LESSON_TIMES, PRZEDMIOT_NAZWY, PRZEDMIOT_KOLORY, TRENING_ZASTEPSTWO)
-- Uploaded: PLAN_LEKCJI (33 lekcje) do Google Sheets
+### System briefów — NAPRAWIONY
+- Brief spam fix: deduplication w Google Sheets (USTAWIENIA), nie in-memory
+- CRON_SECRET auth blokuje nieautoryzowane wywołania w produkcji
+- Nowy format: deterministyczny (zero LLM), Telegram-native
+- Kill switch: /pause_briefs / /resume_briefs
+- Eat the Frog 🐸 w porannym (pierwszy [red] task)
+- Streaki w wieczornym (sekcja STREAKI)
+- Sleep brief: GitHub Actions 23:00 (Make.com free = max 2 scenariusze)
+- Make.com: morning 07:00 + evening 20:00
+
+### Nowe komendy Telegram (łącznie 17)
+/brief /pause_briefs /resume_briefs /wsiadam /dotarlem /kolega_odwola /kartkowka /sprawdzian /koniec_silownia /opuscil_trening /choruje /tasks /streak /pomo /posprzatane /przedluzam /ofm
+
+### OFM Biznes Update
+- Agencja od chattingu: US/UK branch otwiera za 2-3 tygodnie, Polska działa świetnie
+- Reddit admin: rób chatting sam → AI chatting system w planie
+- Materiały od Hadiego: skrypty chattingowe do przetworzenia przez claude-video
+
+### Projekty w kolejce
+1. UI/UX Redesign (spec: 02_Projects/UI-UX-Redesign.md) — NASTĘPNA SESJA
+2. Video Processing Pipeline (02_Projects/Video-Processing-Pipeline.md) — po UI
+3. OFM Expert Multi-Agent (02_Projects/OFM-Expert-System.md) — po uzupełnieniu kanałów
+
+## Zasada pracy z Claude Code
+Claude **zawsze** rekomenduje agentów po każdej wiadomości. Obsidian = ultra-narzędzie — każda ważna info trafia tu.
 
 ## Active Threads
-- DO ZROBIENIA przez użytkownika: Vercel env vars, Telegram webhook
-- Następna sesja: Vercel deploy + Telegram test + morning briefing end-to-end
-- Agent Team: 8 agentów aktywnych, 6 rekomendowanych do dodania (Finance, OFM Strategy, Wake-Up, Sprawdzian Coach, Weekly Review, Trend Monitor)
+- Vercel deploy: middleware fix (PUBLIC_PATHS dla /api/system) — sprawdź dashboard Vercel czy build de79e9a OK
+- STREAKI sheet: wywołaj POST /api/system/setup po deployu
+- GitHub Actions: dodaj secret CRON_SECRET w repo settings
