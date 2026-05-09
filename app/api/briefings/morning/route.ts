@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateMorningBriefFull } from '@/lib/briefings'
 import { sendMessage, energyKeyboard, transportKeyboard } from '@/lib/telegram'
+import { getUstawienie, setUstawienie } from '@/lib/sheets'
 
-// Deduplication: max 1 brief na 4h (in-memory — zeruje się przy restart Vercel)
-const lastSent = new Map<string, number>()
 const COOLDOWN_MS = 4 * 60 * 60 * 1000  // 4 godziny
+const KEY = 'brief_last_morning'
 
 export async function POST(req: NextRequest) {
-  const key = 'morning'
   const now = Date.now()
-  const last = lastSent.get(key) ?? 0
+  const lastStr = await getUstawienie(KEY)
+  const last = lastStr ? parseInt(lastStr, 10) : 0
 
   if (now - last < COOLDOWN_MS) {
     const minLeft = Math.ceil((COOLDOWN_MS - (now - last)) / 60000)
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
     if (body.sendTelegram) {
       await sendMessage('☀️ *Dzień dobry!*\n\nJak dziś dojedziesz do szkoły?', transportKeyboard)
-      lastSent.set(key, now)
+      await setUstawienie(KEY, String(now), 'ostatni poranny brief')
       return NextResponse.json({ success: true })
     }
 
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       await sendMessage(brief)
     }
 
-    lastSent.set(key, now)
+    await setUstawienie(KEY, String(now), 'ostatni poranny brief')
     return NextResponse.json({ success: true, data: brief })
   } catch (error) {
     const msg = error instanceof Error ? error.message : 'Błąd'

@@ -11,13 +11,13 @@ import {
   handleKartkowka, handleOpuscilTrening,
 } from '@/lib/telegram'
 import { runMasterAgent } from '@/lib/master-agent'
+import { getUstawienie, setUstawienie } from '@/lib/sheets'
 
 // Inicjalizuj bot raz
 const bot = new Bot(process.env['TELEGRAM_BOT_TOKEN']!)
 
-// Deduplication: /brief max raz na 30 min
-const briefCooldown = new Map<string, number>()
 const BRIEF_COOLDOWN_MS = 30 * 60 * 1000
+const BRIEF_MANUAL_KEY = 'brief_last_manual'
 
 // ─── Middleware: weryfikacja chat_id (ZASADA KRYTYCZNA) ────────────────────
 bot.use(async (ctx, next) => {
@@ -32,15 +32,15 @@ bot.command('start', async ctx => {
 })
 
 bot.command('brief', async ctx => {
-  const key = String(ctx.chat?.id ?? 'x')
   const now = Date.now()
-  const last = briefCooldown.get(key) ?? 0
+  const lastStr = await getUstawienie(BRIEF_MANUAL_KEY)
+  const last = lastStr ? parseInt(lastStr, 10) : 0
   if (now - last < BRIEF_COOLDOWN_MS) {
     const minLeft = Math.ceil((BRIEF_COOLDOWN_MS - (now - last)) / 60000)
     await ctx.reply(`⏳ Brief wysłany ${Math.floor((now - last) / 60000)} min temu. Następny za ${minLeft} min.`)
     return
   }
-  briefCooldown.set(key, now)
+  await setUstawienie(BRIEF_MANUAL_KEY, String(now), 'ostatni /brief')
   await ctx.reply('⏳ Generuję brief...')
   const brief = await handleBrief()
   await ctx.reply(brief, { parse_mode: 'Markdown' })
