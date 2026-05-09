@@ -139,12 +139,58 @@ bot.command('ofm', async ctx => {
 })
 
 // ─── Anti-fragile training ────────────────────────────────────────────────
-// Użycie: /opuscil_trening silownia (powód opcjonalny)
 bot.command('opuscil_trening', async ctx => {
   const args = ctx.message?.text?.split(' ') ?? []
   const typ = args[1] ?? 'ogolne'
   const reply = await handleOpuscilTrening(typ)
   await ctx.reply(reply, { parse_mode: 'Markdown' })
+})
+
+// ─── Pomodoro Timer ────────────────────────────────────────────────────────
+// Użycie: /pomo [nazwa zadania]
+bot.command('pomo', async ctx => {
+  const task = ctx.message?.text?.replace(/^\/pomo\s*/, '').trim() || 'zadanie'
+  const chatId = ctx.chat?.id
+  if (!chatId) return
+
+  await ctx.reply(
+    `🍅 *POMODORO START*\n\n*${task}*\n\nMasz *25 minut* skupienia.\nWróć tutaj o ${getPomoEndTime()}.`,
+    { parse_mode: 'Markdown' }
+  )
+
+  // Wyślij przypomnienie przez Telegram po 25 minutach (przez Make.com lub bezpośrednio)
+  // Na razie: informuj usera żeby ustawił timer ręcznie
+  await ctx.reply(
+    `⏱ Ustaw timer na 25 min.\nPo przerwie wpisz /pomo żeby zacząć kolejną rundę.`,
+    { parse_mode: 'Markdown' }
+  )
+})
+
+// ─── Streak logger ────────────────────────────────────────────────────────
+// Użycie: /streak silownia | /streak woda | /streak ofm_content
+bot.command('streak', async ctx => {
+  const nawyk = ctx.message?.text?.replace(/^\/streak\s*/, '').trim().toLowerCase()
+  if (!nawyk) {
+    await ctx.reply('Użycie: `/streak silownia` | `/streak woda` | `/streak ofm_content` | `/streak badminton` | `/streak nauka`', { parse_mode: 'Markdown' })
+    return
+  }
+  const { logStreak } = await import('@/lib/streaks')
+  const streak = await logStreak(nawyk)
+  const fire = streak.count >= 7 ? '🔥🔥' : streak.count >= 3 ? '🔥' : '✅'
+  await ctx.reply(
+    `${fire} *${nawyk}* — streak: *${streak.count} dni z rzędu*\nRekord: ${streak.best} dni`,
+    { parse_mode: 'Markdown' }
+  )
+})
+
+// ─── Google Tasks ──────────────────────────────────────────────────────────
+// Użycie: /tasks
+bot.command('tasks', async ctx => {
+  await ctx.reply('⏳ Pobieram zadania...')
+  const { getTodayTasks, formatTasksForTelegram } = await import('@/lib/google-tasks')
+  const tasks = await getTodayTasks().catch(() => [])
+  const msg = formatTasksForTelegram(tasks)
+  await ctx.reply(msg.length > 0 ? `📋 *TWOJE ZADANIA*\n\n${msg}` : '✅ Brak zadań — dodaj pierwsze!', { parse_mode: 'Markdown' })
 })
 
 // ─── Callback queries (inline buttons) ────────────────────────────────────
@@ -208,6 +254,12 @@ async function getWeeklyState(chatId: string) {
   } catch {
     return { weeklyReviewActive: false, weeklyReviewStates: null }
   }
+}
+
+// ─── Helper: czas końca Pomodoro ─────────────────────────────────────────
+function getPomoEndTime(): string {
+  const end = new Date(Date.now() + 25 * 60 * 1000)
+  return `${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`
 }
 
 // ─── Webhook handler ──────────────────────────────────────────────────────

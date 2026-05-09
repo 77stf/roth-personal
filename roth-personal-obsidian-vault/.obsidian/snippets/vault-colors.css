@@ -1,0 +1,14 @@
+/* ROTH Personal Wiki — vault color scheme */
+
+.nav-folder-title[data-path="wiki"] { color: #e8734a; font-weight: 600; }
+.nav-folder-title[data-path="wiki/goals"] { color: #22c55e; }
+.nav-folder-title[data-path="wiki/ventures"] { color: #8B5CF6; }
+.nav-folder-title[data-path="wiki/areas"] { color: #3b82f6; }
+.nav-folder-title[data-path="wiki/learning"] { color: #f59e0b; }
+.nav-folder-title[data-path="wiki/concepts"] { color: #06b6d4; }
+.nav-folder-title[data-path=".raw"] { color: #6b7280; font-style: italic; }
+
+/* Tag colors */
+.tag[href="#goal"] { background-color: #22c55e22; color: #22c55e; }
+.tag[href="#business"] { background-color: #8B5CF622; color: #8B5CF6; }
+.tag[href="#learning"] { background-color: #f59e0b22; color: #f59e0b; }

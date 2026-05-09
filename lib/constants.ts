@@ -286,6 +286,7 @@ export const SHEETS = {
   ZADANIA_DNIA: 'ZADANIA_DNIA',
   DIET_LOG: 'DIET_LOG',
   SYSTEM_LOG: 'SYSTEM_LOG',
+  STREAKI: 'STREAKI',
 } as const
 
 export type SheetName = (typeof SHEETS)[keyof typeof SHEETS]

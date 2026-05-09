@@ -54,16 +54,37 @@ const TOOLS: Tool[] = [
   },
   {
     name: 'add_task',
-    description: 'Dodaj zadanie do listy na dziś lub podany dzień.',
+    description: 'Dodaj zadanie do Google Tasks + lokalnej listy. Auto-klasyfikuje przez Eisenhower Matrix i 3/3/3 method.',
     input_schema: {
       type: 'object' as const,
       properties: {
         task: { type: 'string', description: 'Treść zadania' },
-        priority: { type: 'string', enum: ['red', 'yellow', 'green'], description: 'Priorytet: red=musi być, yellow=powinno, green=opcja' },
+        priority: { type: 'string', enum: ['red', 'yellow', 'green'], description: 'Priorytet: red=głęboka praca, yellow=pilne, green=utrzymanie' },
         category: { type: 'string', description: 'Kategoria: OFM/AI/Szkola/Sport/Dom/Finanse' },
         when: { type: 'string', description: 'Kiedy: dzisiaj (default), jutro, lub data YYYY-MM-DD' },
+        google_tasks: { type: 'boolean', description: 'Czy dodać też do Google Tasks (default: true)' },
       },
       required: ['task', 'priority'],
+    },
+  },
+  {
+    name: 'get_tasks',
+    description: 'Pobierz zadania z Google Tasks posortowane 3/3/3 (głęboka praca / pilne / utrzymanie). Użyj gdy user pyta "co mam do zrobienia" lub "pokaż zadania".',
+    input_schema: {
+      type: 'object' as const,
+      properties: {},
+      required: [],
+    },
+  },
+  {
+    name: 'log_streak',
+    description: 'Zaloguj wykonanie nawyku (Seinfeld Strategy). Użyj gdy user mówi że zrobił trening, wypił wodę, zrobił content.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        nawyk: { type: 'string', enum: ['silownia', 'badminton', 'woda', 'ofm_content', 'nauka'], description: 'Nawyk który wykonał' },
+      },
+      required: ['nawyk'],
     },
   },
   {
@@ -139,8 +160,8 @@ async function executeTool(name: string, input: Record<string, unknown>): Promis
       }
 
       case 'add_task': {
-        const { task, priority, category = 'Inne', when = 'dzisiaj' } = input as {
-          task: string; priority: string; category?: string; when?: string
+        const { task, priority, category = 'Inne', when = 'dzisiaj', google_tasks = true } = input as {
+          task: string; priority: string; category?: string; when?: string; google_tasks?: boolean
         }
         const today = new Date()
         let dateStr = today.toISOString().split('T')[0]!
@@ -151,7 +172,30 @@ async function executeTool(name: string, input: Record<string, unknown>): Promis
           dateStr = when
         }
         await appendRow(SHEETS.ZADANIA_DNIA, [dateStr, task, priority, category, '', 'nie'])
+
+        // Sync do Google Tasks
+        if (google_tasks) {
+          const { addGoogleTask, classifyEisenhower, classify3x3 } = await import('./google-tasks')
+          await addGoogleTask({ title: task, due: dateStr }).catch(() => null)
+          const ei = classifyEisenhower(task)
+          const cat = classify3x3(task)
+          return `Dodano: [${priority}] ${task} na ${dateStr}\nEisenhower: ${ei} · 3x3: ${cat}`
+        }
         return `Dodano: [${priority}] ${task} na ${dateStr}`
+      }
+
+      case 'get_tasks': {
+        const { getTodayTasks, formatTasksForTelegram } = await import('./google-tasks')
+        const tasks = await getTodayTasks().catch(() => [])
+        return formatTasksForTelegram(tasks)
+      }
+
+      case 'log_streak': {
+        const { nawyk } = input as { nawyk: string }
+        const { logStreak } = await import('./streaks')
+        const streak = await logStreak(nawyk)
+        const fire = streak.count >= 7 ? '🔥🔥' : streak.count >= 3 ? '🔥' : '✅'
+        return `${fire} ${nawyk}: ${streak.count} dni z rzędu (rekord: ${streak.best})`
       }
 
       case 'write_obsidian': {

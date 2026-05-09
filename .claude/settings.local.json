@@ -5,7 +5,29 @@
       "Bash(npx tsc:*)",
       "Bash(npm run:*)",
       "Bash(grep:*)",
-      "Bash(npm audit:*)"
+      "Bash(npm audit:*)",
+      "Bash(git remote *)",
+      "Bash(node *)",
+      "Bash(git clone *)",
+      "Bash(claude plugin *)",
+      "Bash(cp *)",
+      "Bash(cp -r \"/c/Users/crypt/ROTH Personal/claude-obsidian/commands\" /c/Users/crypt/.claude/)",
+      "Bash(cp -r \"/c/Users/crypt/ROTH Personal/claude-obsidian/hooks\" /c/Users/crypt/.claude/)",
+      "Skill(wiki)",
+      "Bash(graphify install *)",
+      "PowerShell(graphify install *)",
+      "PowerShell(python -m graphify install --platform windows 2>&1)",
+      "Bash(npx get-shit-done-cc@latest)",
+      "Bash(mkdir -p /c/Users/crypt/.claude/agents)",
+      "Bash(cp \"/c/Users/crypt/.claude/voltagent-temp/categories/01-core-development/\"*.md /c/Users/crypt/.claude/agents/)",
+      "Bash(cp \"/c/Users/crypt/.claude/voltagent-temp/categories/09-meta-orchestration/\"*.md /c/Users/crypt/.claude/agents/)",
+      "Bash(cp \"/c/Users/crypt/.claude/voltagent-temp/categories/08-business-product/\"*.md /c/Users/crypt/.claude/agents/)",
+      "Bash(cp \"/c/Users/crypt/.claude/ecc-temp/agents/\"*.md /c/Users/crypt/.claude/agents/)",
+      "Bash(head -97 \"/c/Users/crypt/ROTH Personal/app/dashboard/szkola/page.tsx\")",
+      "Bash(cp /tmp/szkola_clean.tsx \"/c/Users/crypt/ROTH Personal/app/dashboard/szkola/page.tsx\")",
+      "Bash(npx next *)",
+      "Bash(ls -la next.config* tsconfig.json)",
+      "Bash(dir next.config* tsconfig.json)"
     ]
   }
 }
