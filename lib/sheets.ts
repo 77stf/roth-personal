@@ -33,6 +33,25 @@ const SPREADSHEET_ID = process.env['GOOGLE_SHEETS_ID']!
 
 // ─── Bazowe operacje ──────────────────────────────────────────────────────
 
+export async function ensureSheetExists(sheetName: string, headers: string[]): Promise<void> {
+  const sheets = getSheetsClient()
+  // Sprawdź czy arkusz istnieje
+  const meta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID })
+  const exists = meta.data.sheets?.some(s => s.properties?.title === sheetName)
+  if (!exists) {
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId: SPREADSHEET_ID,
+      requestBody: { requests: [{ addSheet: { properties: { title: sheetName } } }] },
+    })
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${sheetName}!A1`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [headers] },
+    })
+  }
+}
+
 export async function readSheet(sheetName: SheetName, range = 'A:Z'): Promise<string[][]> {
   const sheets = getSheetsClient()
   const res = await sheets.spreadsheets.values.get({
