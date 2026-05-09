@@ -8,7 +8,9 @@ const KEY = 'brief_last_morning'
 
 function isAuthorized(req: NextRequest): boolean {
   const secret = process.env['CRON_SECRET']
-  if (!secret) return true  // brak ustawionego sekretu = lokalnie
+  const isProd = process.env['NODE_ENV'] === 'production'
+  if (!isProd) return true  // lokalnie — bez weryfikacji
+  if (!secret) return false  // produkcja bez sekretu = blokada
   const auth = req.headers.get('authorization') ?? req.headers.get('x-cron-secret') ?? ''
   return auth === `Bearer ${secret}` || auth === secret
 }
