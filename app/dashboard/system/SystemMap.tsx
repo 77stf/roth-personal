@@ -84,14 +84,27 @@ const NODES: NodeDef[] = [
   },
   {
     id: 'telegram', x: 90, y: 55,
-    label: 'Telegram Bot', sublabel: '17 komend · Grammy',
+    label: 'Telegram Bot', sublabel: '20 komend · Grammy',
     color: '#FF9500',
     icon: <Send size={14} />,
     details: {
-      description: 'Mobilny interfejs — 17 komend, automatyczne briefy, szybkie akcje z każdego miejsca.',
-      flow: ['/brief /water /ask /plan', '/kartkowka /sprawdzian /kolo', '/ofm /context /add_reddit', 'Automatyczne briefy i alerty systemowe'],
+      description: 'Mobilny interfejs — 20 komend w 5 kategoriach. Tekst bez / → Master Agent (Claude). Inline keyboards dla chorowania i weekly review.',
+      flow: [
+        'Szkoła: /kartkowka /sprawdzian /kolo /praca [przedmiot] [termin]',
+        'Transport: /wsiadam /dotarlem /kolega_odwola',
+        'Sport: /koniec_silownia [min] /opuscil_trening /choruje /streak [nawyk]',
+        'Daily: /brief (cooldown 30min) /ofm /pomo [task] /tasks /posprzatane /przedluzam [min]',
+        'System: /start /pause_briefs /resume_briefs · tekst → Master Agent',
+      ],
       tech: 'Grammy framework, webhook mode, HMAC secret verification',
-      commands: ['/brief', '/water', '/kartkowka', '/ofm', '/ask'],
+      commands: [
+        '/brief', '/kartkowka', '/sprawdzian', '/kolo',
+        '/ofm', '/streak', '/pomo', '/tasks',
+        '/wsiadam', '/dotarlem', '/choruje',
+        '/koniec_silownia', '/opuscil_trening',
+        '/posprzatane', '/przedluzam', '/kolega_odwola',
+        '/pause_briefs', '/resume_briefs', '/start',
+      ],
     },
   },
   {
