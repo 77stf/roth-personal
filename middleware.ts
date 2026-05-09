@@ -7,6 +7,9 @@ const PUBLIC_PATHS = [
   '/login',
   '/api/auth',              // Auth endpoints — dostępne bez sesji
   '/api/telegram/webhook',  // Telegram webhook — publiczny (weryfikowany przez secret token)
+  '/api/briefings',         // Cron briefings — chronione CRON_SECRET
+  '/api/system',            // System setup — chronione CRON_SECRET
+  '/api/agents',            // Agent endpoints — chronione CRON_SECRET
   '/_next',
   '/icons',
   '/manifest.json',
