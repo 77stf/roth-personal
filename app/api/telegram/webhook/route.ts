@@ -7,10 +7,10 @@ import {
   verifyChatId, handleStart, handleBrief, handleChoruje,
   handleWsiadam, handleDotarlem, handleKolegaOdwola,
   handleKoniecSilownia, handlePrzedluzam, handlePosprzatane,
-  handleTextMessage, handleCallbackQuery, handleWeeklyReviewAnswer,
-  startWeeklyReview, sendMessage,
+  handleCallbackQuery, handleWeeklyReviewAnswer,
   handleKartkowka, handleOpuscilTrening,
 } from '@/lib/telegram'
+import { runMasterAgent } from '@/lib/master-agent'
 
 // Inicjalizuj bot raz
 const bot = new Bot(process.env['TELEGRAM_BOT_TOKEN']!)
@@ -156,10 +156,13 @@ bot.on('callback_query:data', async ctx => {
   }
 })
 
-// ─── Wiadomości tekstowe ──────────────────────────────────────────────────
+// ─── Wiadomości tekstowe → Master Agent ──────────────────────────────────
 bot.on('message:text', async ctx => {
   const text = ctx.message.text
   const chatId = String(ctx.chat.id)
+
+  // Pomiń komendy (obsłużone wyżej)
+  if (text.startsWith('/')) return
 
   // Weekly Review w trakcie?
   const { weeklyReviewActive } = await getWeeklyState(chatId)
@@ -169,10 +172,16 @@ bot.on('message:text', async ctx => {
     return
   }
 
-  const response = await handleTextMessage(text)
-  if (response) {
-    await ctx.reply(response, { parse_mode: 'Markdown' })
+  // Szybki wydatek (wzorzec: "45 zl jedzenie")
+  if (/^\d+\s*(zl|zł|pln)/i.test(text.trim())) {
+    const { handleTextMessage } = await import('@/lib/telegram')
+    const response = await handleTextMessage(text)
+    if (response) { await ctx.reply(response, { parse_mode: 'Markdown' }); return }
   }
+
+  // Master Agent — obsługuje wszystko pozostałe
+  const response = await runMasterAgent(text)
+  await ctx.reply(response, { parse_mode: 'Markdown' })
 })
 
 // Helper: sprawdź czy Weekly Review aktywny

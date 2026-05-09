@@ -23,14 +23,14 @@ console.log(`App URL: ${APP_URL}`)
 console.log(`Webhook: ${WEBHOOK_URL}`)
 console.log(`Secret:  ${SECRET}\n`)
 
-// 1. Usuń stary webhook
-const delRes = await fetch(`https://api.telegram.org/bot${TOKEN}/deleteWebhook`)
+// 1. Usuń stary webhook + wyczyść kolejkę (drop_pending_updates=true)
+const delRes = await fetch(`https://api.telegram.org/bot${TOKEN}/deleteWebhook?drop_pending_updates=true`)
 const delData = await delRes.json()
-console.log('Delete old webhook:', delData.ok ? '✅' : '❌', delData.description ?? '')
+console.log('Delete old webhook + clear queue:', delData.ok ? '✅' : '❌', delData.description ?? '')
 
 // 2. Ustaw nowy z secret_token
 const setRes = await fetch(
-  `https://api.telegram.org/bot${TOKEN}/setWebhook?url=${encodeURIComponent(WEBHOOK_URL)}&secret_token=${SECRET}&allowed_updates=["message","callback_query"]`
+  `https://api.telegram.org/bot${TOKEN}/setWebhook?url=${encodeURIComponent(WEBHOOK_URL)}&secret_token=${SECRET}&drop_pending_updates=true&allowed_updates=["message","callback_query"]`
 )
 const setData = await setRes.json()
 console.log('Set new webhook:', setData.ok ? '✅' : '❌', setData.description ?? '')
