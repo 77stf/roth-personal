@@ -2,33 +2,38 @@
 
 @layer base {
   :root {
-    /* Dark theme — ROTH */
-    --bg-base: #0a0a0f;
-    --bg-surface: #12121a;
-    --bg-elevated: #1a1a26;
-    --bg-card: #1e1e2e;
-    --border: #2a2a3e;
-    --border-subtle: #1e1e2e;
+    /* Light mode — Apple palette */
+    --bg-base:     #F5F5F7;
+    --bg-surface:  #FFFFFF;
+    --bg-elevated: #E8E8ED;
+    --bg-card:     rgba(255, 255, 255, 0.72);
+    --border:      #D2D2D7;
+    --border-subtle: #E8E8ED;
 
     /* Tekst */
-    --text-primary: #e8e8f0;
-    --text-secondary: #8888a8;
-    --text-muted: #5555780;
+    --text-primary:   #1D1D1F;
+    --text-secondary: #6E6E73;
+    --text-muted:     #AEAEB2;
 
-    /* Akcenty ROTH */
-    --accent-red: #ff3366;
-    --accent-orange: #ff8c42;
-    --accent-yellow: #ffd166;
-    --accent-green: #06d6a0;
-    --accent-blue: #4cc9f0;
-    --accent-purple: #7b2d8b;
+    /* Akcenty */
+    --accent-red:    #FF3B30;
+    --accent-orange: #FF9500;
+    --accent-yellow: #FFCC00;
+    --accent-green:  #34C759;
+    --accent-blue:   #007AFF;
+    --accent-purple: #AF52DE;
 
-    /* Kolory zadań (energia) */
-    --task-red: #ff3366;      /* CZERWONE — wysoka energia */
-    --task-yellow: #ffd166;   /* ŻÓŁTE — średnia energia */
-    --task-green: #06d6a0;    /* ZIELONE — niska energia */
+    /* Zadania */
+    --task-red:    #FF3B30;
+    --task-yellow: #FFCC00;
+    --task-green:  #34C759;
 
-    /* Sidebar */
+    /* Glassmorphism */
+    --glass-bg:     rgba(255, 255, 255, 0.72);
+    --glass-border: rgba(255, 255, 255, 0.6);
+    --glass-blur:   blur(20px) saturate(180%);
+    --glass-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
+
     --sidebar-width: 240px;
     --sidebar-collapsed: 64px;
   }
@@ -48,62 +53,57 @@
   body {
     background-color: var(--bg-base);
     color: var(--text-primary);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
     min-height: 100dvh;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Mobile-first: minimum 375px */
   @media (max-width: 374px) {
-    html {
-      font-size: 14px;
-    }
+    html { font-size: 14px; }
   }
 
-  /* Scrollbar */
-  ::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-  }
-  ::-webkit-scrollbar-track {
-    background: var(--bg-surface);
-  }
-  ::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 2px;
-  }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg-elevated); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-  /* Focus visible */
   :focus-visible {
     outline: 2px solid var(--accent-blue);
     outline-offset: 2px;
   }
 
-  /* Safe area dla notch/home indicator */
-  .safe-top {
-    padding-top: env(safe-area-inset-top);
-  }
-  .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
+  .safe-top    { padding-top: env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 }
 
 @layer components {
-  /* Karty */
+  /* Glass card — główny styl kart */
   .card {
-    background: var(--bg-card);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--glass-shadow);
+  }
+
+  /* Solid card — dla sidebar, paneli terminalowych */
+  .card-solid {
+    background: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 16px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   }
 
   .card-elevated {
-    background: var(--bg-elevated);
+    background: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
   }
 
   /* Przyciski */
@@ -119,10 +119,7 @@
     transition: opacity 0.15s;
     -webkit-tap-highlight-color: transparent;
   }
-
-  .btn-primary:hover {
-    opacity: 0.85;
-  }
+  .btn-primary:hover { opacity: 0.85; }
 
   .btn-secondary {
     background: var(--bg-elevated);
@@ -136,12 +133,9 @@
     transition: background 0.15s;
     -webkit-tap-highlight-color: transparent;
   }
+  .btn-secondary:hover { background: var(--border); }
 
-  .btn-secondary:hover {
-    background: var(--bg-card);
-  }
-
-  /* Odznaki zadań */
+  /* Task chips */
   .task-chip {
     display: inline-flex;
     align-items: center;
@@ -155,24 +149,24 @@
   }
 
   .task-chip-red {
-    background: rgba(255, 51, 102, 0.15);
+    background: rgba(255, 59, 48, 0.1);
     color: var(--accent-red);
-    border: 1px solid rgba(255, 51, 102, 0.3);
+    border: 1px solid rgba(255, 59, 48, 0.2);
   }
 
   .task-chip-yellow {
-    background: rgba(255, 209, 102, 0.15);
-    color: var(--accent-yellow);
-    border: 1px solid rgba(255, 209, 102, 0.3);
+    background: rgba(255, 204, 0, 0.15);
+    color: #8B7200;
+    border: 1px solid rgba(255, 204, 0, 0.3);
   }
 
   .task-chip-green {
-    background: rgba(6, 214, 160, 0.15);
-    color: var(--accent-green);
-    border: 1px solid rgba(6, 214, 160, 0.3);
+    background: rgba(52, 199, 89, 0.1);
+    color: #1A7D38;
+    border: 1px solid rgba(52, 199, 89, 0.2);
   }
 
-  /* Pasek postępu */
+  /* Progress bar */
   .progress-bar {
     height: 6px;
     background: var(--bg-elevated);
@@ -193,24 +187,48 @@
     border-top: 1px solid var(--border-subtle);
     margin: 12px 0;
   }
+
+  /* Terminal panel — BriefPanel */
+  .terminal-panel {
+    background: #1D1D1F;
+    border-radius: 12px;
+    padding: 16px;
+    font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+    color: #E8E8ED;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .terminal-panel .terminal-header {
+    color: #6E6E73;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #2C2C2E;
+  }
+
+  .terminal-panel .frog-box {
+    border-left: 3px solid var(--accent-red);
+    padding: 8px 12px;
+    background: rgba(255, 59, 48, 0.08);
+    border-radius: 0 8px 8px 0;
+    margin: 8px 0 12px;
+    color: #FFD1CF;
+  }
 }
 
 @layer utilities {
-  .text-muted {
-    color: var(--text-secondary);
-  }
-
-  .text-accent-red { color: var(--accent-red); }
-  .text-accent-green { color: var(--accent-green); }
-  .text-accent-yellow { color: var(--accent-yellow); }
-  .text-accent-blue { color: var(--accent-blue); }
-  .text-accent-orange { color: var(--accent-orange); }
+  .text-muted    { color: var(--text-secondary); }
+  .text-red      { color: var(--accent-red); }
+  .text-green    { color: var(--accent-green); }
+  .text-blue     { color: var(--accent-blue); }
+  .text-orange   { color: var(--accent-orange); }
 
   .bg-surface { background: var(--bg-surface); }
-  .bg-card { background: var(--bg-card); }
-  .border-subtle { border-color: var(--border); }
+  .bg-card    { background: var(--bg-card); }
 
-  /* Touch targets — minimum 44px dla mobile */
   .touch-target {
     min-height: 44px;
     min-width: 44px;
@@ -219,14 +237,13 @@
     justify-content: center;
   }
 
-  /* Animacje */
   .fade-in {
     animation: fadeIn 0.2s ease;
   }
 
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
   .pulse-soft {
@@ -235,6 +252,6 @@
 
   @keyframes pulseSoft {
     0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
+    50%       { opacity: 0.6; }
   }
 }
