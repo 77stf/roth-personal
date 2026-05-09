@@ -7,6 +7,7 @@ import { getWaterToday, getAktywneReki, getSprawdziany } from '@/lib/sheets'
 import { getCurrentEnergyZone, obliczScoring, getScoringOpis } from '@/lib/scoring'
 import { getPogoda } from '@/lib/weather'
 import { StatCard } from '@/components/ui/StatCard'
+import { WaterButton } from '@/components/ui/WaterButton'
 
 async function TodayDashboard() {
   const now = new Date()
@@ -100,17 +101,27 @@ async function TodayDashboard() {
           variant="default"
         />
         {waterData && (
-          <StatCard
-            label="Woda"
-            value={waterData.wypito}
-            unit={`/${waterData.celMl}ml`}
-            trend={waterData.procent >= 100
-              ? 'Cel osiagniety'
-              : `Zostalo ${waterData.celMl - waterData.wypito}ml`
-            }
-            icon={<Droplets size={16} />}
-            variant={waterData.procent >= 100 ? 'success' : 'default'}
-          />
+          <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{
+                width: '32px', height: '32px', borderRadius: '8px',
+                background: 'rgba(0,122,255,0.1)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--accent-blue)',
+              }}>
+                <Droplets size={16} />
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Woda
+                </div>
+                <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>
+                  {waterData.wypito}<span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', marginLeft: '2px' }}>/{waterData.celMl}ml</span>
+                </div>
+              </div>
+            </div>
+            <WaterButton currentMl={waterData.wypito} targetMl={waterData.celMl} />
+          </div>
         )}
         {pogodaData && (
           <StatCard

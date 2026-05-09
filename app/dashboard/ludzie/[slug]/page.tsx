@@ -5,6 +5,7 @@ import { getOsobyProfile } from '@/lib/sheets'
 import { readNote } from '@/lib/obsidian'
 import { OBSIDIAN_FOLDERS } from '@/lib/constants'
 import { notFound } from 'next/navigation'
+import { AddNoteForm } from './AddNoteForm'
 
 type PageProps = { params: Promise<{ slug: string }> }
 
@@ -111,7 +112,7 @@ async function OsobaContent({ slug }: { slug: string }) {
 
       {/* Obsidian note */}
       {obsidianNote && (
-        <div className="card">
+        <div className="card" style={{ marginBottom: '16px' }}>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Plik Obsidian
           </div>
@@ -131,6 +132,12 @@ async function OsobaContent({ slug }: { slug: string }) {
           </div>
         </div>
       )}
+
+      {/* Add note to Obsidian */}
+      <AddNoteForm
+        personName={osoba.imie}
+        notePath={`${OBSIDIAN_FOLDERS.people}/${osoba.imie}.md`}
+      />
     </div>
   )
 }
